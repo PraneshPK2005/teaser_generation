@@ -1,206 +1,304 @@
-# Video Teaser Generator
 
-A comprehensive pipeline for automatically generating engaging video teasers from YouTube videos or local files. This system uses AI to identify the most impactful moments and creates teasers within specified duration constraints.
 
-## Features
+# YouTube Teaser Generator 🎬
 
-- **YouTube Video Download**: Download videos and extract optimized audio for transcription
-- **AI-Powered Transcription**: Convert audio to timestamped transcripts using Whisper
-- **Smart Segment Selection**: Use Ollama AI models to identify the most engaging moments
-- **Precise Duration Control**: Ensure teasers fit within specified time constraints (45-65 seconds by default)
-- **Automated Video Editing**: Extract and combine selected segments into a final teaser
-- **Cloud Integration**: Automatically upload assets to AWS S3 for storage and distribution
+A sophisticated AI-powered pipeline that automatically generates teaser videos from YouTube content using multimodal analysis (audio transcription + visual description) and semantic embedding techniques.
 
-## Architecture
+## 🌟 Features
 
+- **YouTube Video Processing**: Downloads and processes YouTube videos with optimized audio extraction
+- **Multimodal Analysis**: 
+  - Whisper timestamped audio transcription
+  - BLIP visual scene description generation
+- **Semantic Embedding**: FAISS-based retrieval of most relevant video segments
+- **Multiple Generation Methods**: Three distinct teaser generation approaches
+- **AWS Integration**: Seamless S3 storage integration for processed assets
+
+## 🏗️ Architecture Diagram
+
+```mermaid
+graph TD
+    A[YouTube URL Input] --> B[get_videos_from_url.py]
+    B --> C[Video Download & Processing]
+    B --> D[Audio Extraction]
+    
+    D --> E[transcribe_audio_from_whisper.py]
+    E --> F[Audio Transcription]
+    
+    C --> G[get_description_from_blip.py]
+    G --> H[Scene Detection & Frame Extraction]
+    G --> I[Visual Description Generation]
+    
+    F --> J[clean_audio_transcripts.py]
+    I --> K[clean_visual_descriptions.py]
+    
+    J --> L[Preprocessed Audio Data]
+    K --> M[Preprocessed Visual Data]
+    
+    L --> N[create_embeddings_and_query.py]
+    M --> N
+    
+    N --> O[Semantic Embedding & Querying]
+    O --> P[get_timestamps_from_embeds_output.py]
+    
+    L --> Q[ollama_summarization_voiceover.py]
+    Q --> R[Voiceover Generation]
+    
+    P --> S[make_teaser_from_timestamps.py]
+    R --> S
+    
+    S --> T[Final Teaser Video]
+    T --> U[S3 Storage Integration]
 ```
-YouTube URL/Local File → Download/Extract → Transcribe → AI Analysis → Video Editing → Teaser Output
+
+## 📋 Workflow & File Dependencies
+
+### Core Processing Pipeline
+
+1. **Input Acquisition** (`get_videos_from_url.py`)
+   - **Input**: YouTube URL string
+   - **Output**: 
+     - Local video file path (MP4)
+     - Processed audio file path (WAV)
+   - **Calls**: None (entry point)
+
+2. **Audio Processing** (`transcribe_audio_from_whisper.py`)
+   - **Input**: Audio file path from step 1
+   - **Output**: Raw audio transcript segments with timestamps
+   - **Calls**: None (standalone processing)
+
+3. **Visual Processing** (`get_description_from_blip.py`)
+   - **Input**: Video file path from step 1
+   - **Output**: Raw visual description segments with timestamps
+   - **Calls**: None (standalone processing)
+
+4. **Data Cleaning** (`clean_audio_transcripts.py`, `clean_visual_descriptions.py`)
+   - **Input**: Raw segments from steps 2 and 3
+   - **Output**: Preprocessed segments (filler removal, deduplication)
+   - **Calls**: None (data transformation)
+
+5. **Semantic Processing** (`create_embeddings_and_query.py`)
+   - **Input**: Preprocessed audio and visual data
+   - **Output**: 
+     - FAISS indices for both modalities
+     - Query results for best segments
+   - **Calls**: None (embedding generation)
+
+6. **Timestamp Extraction** (`get_timestamps_from_embeds_output.py`)
+   - **Input**: Query results from step 5
+   - **Output**: Timestamp pairs for video clipping
+   - **Calls**: None (timestamp processing)
+
+7. **Voiceover Generation** (`ollama_summarization_voiceover.py`) - *Method B only*
+   - **Input**: Preprocessed audio data from step 4
+   - **Output**: Timed summary audio file (MP3)
+   - **Calls**: None (audio generation)
+
+8. **Teaser Assembly** (`make_teaser_from_timestamps.py`)
+   - **Input**: 
+     - Original video from step 1
+     - Timestamps from step 6
+     - (Optional) Voiceover from step 7
+   - **Output**: Final teaser video file (MP4)
+   - **Calls**: None (video processing)
+
+## 🔧 Methods Definition
+
+### Learning Method A
+- **Purpose**: Audio-focused teaser using only the best audio segments
+- **Process**: 
+  1. Uses only audio embeddings to select segments
+  2. No voiceover generated
+  3. Original audio from video clips is preserved
+- **Output**: Video with selected audio segments
+
+### Learning Method B
+- **Purpose**: Balanced approach using both audio and visual elements
+- **Process**:
+  1. Uses both audio and visual embeddings
+  2. Generates summarized voiceover from audio content
+  3. Selects visual segments based on semantic relevance
+  4. Combines selected visuals with generated voiceover
+- **Output**: Video with selected visuals and generated voiceover
+
+### Cinematic Method A
+- **Purpose**: Visual-focused teaser emphasizing cinematic moments
+- **Process**:
+  1. Uses both audio and visual embeddings
+  2. Focuses on visually striking segments
+  3. Preserves original audio from selected segments
+  4. No voiceover generated
+- **Output**: Video with selected visual segments and their original audio
+
+## 📊 Input/Output Formats
+
+### Audio Data Format
+```python
+# Input/Output structure for audio processing
+[
+    {
+        "timestamp": "[start_time]s - [end_time]s",
+        "text": "transcribed text content"
+    }
+]
 ```
 
-## Installation
+### Visual Data Format
+```python
+# Input/Output structure for visual processing
+[
+    {
+        "timestamp": "[timestamp]s",
+        "text": "visual description content"
+    }
+]
+```
+
+### Embedding Query Results
+```python
+# Output from create_embeddings_and_query.py
+{
+    "audio_results": [
+        {
+            "timestamp": "[start_time]s - [end_time]s",
+            "text": "selected audio text",
+            "score": similarity_score
+        }
+    ],
+    "visual_results": [
+        {
+            "timestamp": "[timestamp]s",
+            "text": "selected visual description",
+            "score": similarity_score
+        }
+    ]
+}
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Python 3.8+
-- FFmpeg
-- AWS Account (for S3 storage)
-- Ollama (for AI analysis)
-
-### Setup
-
-1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd video-teaser-generator
+# Install dependencies
+pip install boto3 python-dotenv yt-dlp torch whisper-timestamped transformers opencv-python scenedetect sentence-transformers faiss-cpu ollama pyttsx3
+
+# Install FFmpeg (required for audio/video processing)
+# Ubuntu/Debian
+sudo apt install ffmpeg
+
+# Windows (via chocolatey)
+choco install ffmpeg
+
+# macOS
+brew install ffmpeg
 ```
 
-2. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Install Ollama and required models:
-```bash
-# Install Ollama (visit https://ollama.ai for platform-specific instructions)
-ollama pull llama3.2:3b
-```
-
-4. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your AWS credentials and configuration
-```
-
-### Environment Variables
-
-Create a `.env` file with the following variables:
-
+### Configuration
+1. Clone this repository
+2. Install required dependencies
+3. Set up environment variables in `.env`:
 ```env
-AWS_ACCESS_KEY=your_aws_access_key
-AWS_SECRET_KEY=your_aws_secret_key
+AWS_ACCESS_KEY=your_access_key
+AWS_SECRET_KEY=your_secret_key
 AWS_REGION=us-east-1
-BUCKET_NAME=your_s3_bucket_name
-FFMPEG_PATH=C:/path/to/ffmpeg/bin  # Optional, for Windows
+BUCKET_NAME=your_bucket_name
 ```
 
-## Usage
-
-### Basic Usage
-
-Run the main orchestration script:
-
-```bash
-python main.py
-```
-
-This will process the default YouTube video and generate a teaser.
-
-### Custom Usage
-
+### Usage
 ```python
-from main import TeaserGenerator
+# Run the complete pipeline
+from main_workflow import youtube_to_teaser
 
-# Initialize the generator
-generator = TeaserGenerator()
-
-# Process a YouTube video
-result = generator.process_youtube_video(
-    youtube_url="https://youtube.com/your-video",
-    expected_time=45,  # Minimum duration in seconds
-    max_sec=65         # Maximum duration in seconds
+result = youtube_to_teaser(
+    youtube_url="https://youtu.be/EXAMPLE_VIDEO",
+    method="learning_b",  # Choose from: learning_a, learning_b, cinematic_a
+    output_dir="output"
 )
 
-# Process a local video file
-result = generator.process_local_video(
-    video_path="path/to/your/video.mp4",
-    expected_time=45,
-    max_sec=65
-)
+print(f"Teaser generated: {result['s3_url']}")
 ```
 
-### Individual Components
-
-You can also use the individual components separately:
-
-1. **Download videos from YouTube**:
-```python
-from get_videos_from_url import download_youtube_video_and_audio
-
-video_path, audio_path = download_youtube_video_and_audio(
-    "https://youtube.com/your-video",
-    "downloads"
-)
+## 📁 Project Structure
+```
+youtube-teaser-generator/
+│
+├── get_videos_from_url.py          # Video download & initial processing
+├── transcribe_audio_from_whisper.py # Audio transcription
+├── get_description_from_blip.py     # Visual description generation
+├── clean_audio_transcripts.py       # Audio data preprocessing
+├── clean_visual_descriptions.py     # Visual data preprocessing
+├── create_embeddings_and_query.py   # Semantic embedding & querying
+├── get_timestamps_from_embeds_output.py # Timestamp extraction
+├── ollama_summarization_voiceover.py # Voiceover generation (Method B)
+├── make_teaser_from_timestamps.py   # Final video assembly
+├── main_workflow.py                # Integrated workflow
+└── README.md                       # This file
 ```
 
-2. **Transcribe audio**:
-```python
-from transcribe_audio_from_whisper import transcribe_audio
+## 💡 Advanced Configuration
 
-transcription = transcribe_audio("path/to/audio.wav")
-```
-
-3. **Generate teaser timestamps**:
-```python
-from based_on_orig_transcripts import get_teaser_timestamps
-
-timestamps = get_teaser_timestamps(transcription, 45, 65)
-```
-
-4. **Create teaser video**:
-```python
-from making_teaser_from_timestamps import crop_and_merge_clips_ffmpeg
-
-result = crop_and_merge_clips_ffmpeg(
-    video_path="path/to/video.mp4",
-    timestamps=timestamps,
-    output_path="teaser_output.mp4"
-)
-```
-
-## File Structure
-
-```
-video-teaser-generator/
-├── main.py                 # Main orchestration script
-├── get_videos_from_url.py  # YouTube video downloader
-├── transcribe_audio_from_whisper.py  # Audio transcription
-├── based_on_orig_transcripts.py      # AI segment selection
-├── making_teaser_from_timestamps.py  # Video editing
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment variables template
-├── downloads/             # Downloaded videos and audio
-├── outputs/               # Generated teasers
-└── README.md             # This file
-```
-
-## Configuration
-
-### AI Model Selection
-
-The system uses Ollama's AI models for segment selection. You can modify the model in `based_on_orig_transcripts.py`:
+### Customizing Query Parameters
+In `create_embeddings_and_query.py`, you can modify the query texts for each method:
 
 ```python
-# Change this line to use a different model
-response = client.generate(model='llama3.2:3b', prompt=prompt)
+# Customize these queries for your specific needs
+QUERY_CONFIG = {
+    "learning_a": {
+        "audio_query": "most engaging and informative dialogue",
+        "visual_query": ""
+    },
+    "learning_b": {
+        "audio_query": "key points and summary",
+        "visual_query": "most relevant and descriptive visuals"
+    },
+    "cinematic_a": {
+        "audio_query": "cinematic and dramatic audio",
+        "visual_query": "most cinematic and visually appealing scenes"
+    }
+}
 ```
 
-Available models include:
-- `llama3.2:3b` (default)
-- `llama3:8b`
-- `mistral:7b`
-- `gemma:7b`
-
-### Duration Constraints
-
-Adjust the teaser duration by modifying the `expected_time` and `max_sec` parameters:
+### Adjusting Video Processing Parameters
+In `make_teaser_from_timestamps.py`, you can modify video processing settings:
 
 ```python
-# For shorter teasers (30-45 seconds)
-timestamps = get_teaser_timestamps(transcription, 30, 45)
-
-# For longer teasers (60-90 seconds)  
-timestamps = get_teaser_timestamps(transcription, 60, 90)
+# FFmpeg quality parameters
+FFMPEG_CONFIG = {
+    "video_codec": "libx264",
+    "preset": "fast",
+    "crf": "18",
+    "audio_codec": "aac"
+}
 ```
 
-## Contributing
+## 🛠️ Troubleshooting
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Common Issues
 
-## License
+1. **FFmpeg not found**
+   - Ensure FFmpeg is installed and available in PATH
+   - Or set the `FFMPEG_PATH` environment variable
+
+2. **Whisper model download issues**
+   - Check internet connection
+   - Verify sufficient disk space for models
+
+3. **AWS credentials errors**
+   - Verify AWS credentials in `.env` file
+   - Check S3 bucket permissions
+
+4. **Ollama connection issues**
+   - Ensure Ollama is running locally
+   - Verify model availability (`llama3.2:latest`)
+
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
+## 🙋‍♂️ Support
 
-- [OpenAI Whisper](https://github.com/openai/whisper) for audio transcription
-- [Ollama](https://ollama.ai) for AI model inference
-- [FFmpeg](https://ffmpeg.org) for video processing
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) for YouTube video downloading
+For support or questions, please open an issue in the GitHub repository or contact the development team.
 
-## Support
+---
 
-For support or questions, please open an issue on GitHub or contact the development team.
+**Note**: This project requires significant computational resources for optimal performance, especially for video processing and ML inference tasks . For production deployment, consider using GPU-optimized instances and distributed processing architectures .

@@ -2,7 +2,7 @@ import ollama
 import pyttsx3
 import os
 
-def summarize_text(transcript, duration_seconds, wpm, model='llama3.2:latest'):
+def summarize_text(transcript, duration_seconds, wpm, model='llama3.2:3b'):
     """
     Summarizes a transcript to a specific word count based on duration and WPM using an Ollama model.
 
@@ -47,7 +47,7 @@ def summarize_text(transcript, duration_seconds, wpm, model='llama3.2:latest'):
                 {'role': 'user', 'content': prompt},
             ],
             options={
-                "num_ctx": 100000  # or higher, depending on what llama3.2:3b supports
+                "num_ctx": 50000  # or higher, depending on what llama3.2:3b supports
             }
         )
         summary = response['message']['content'].strip()

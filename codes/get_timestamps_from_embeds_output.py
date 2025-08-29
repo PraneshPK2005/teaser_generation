@@ -35,9 +35,9 @@ def extract_timestamps_by_method(method, audio_results, visual_results):
                 ts.append([start, start + 1.5])
         return ts
 
-    if method == "learning method a":
+    if method == "learning_a":
         timestamps = get_audio()
-    elif method in ["learning method b", "cinematic method a"]:
+    elif method in ["learning_b", "cinematic_a"]:
         timestamps = get_visual()
     else:
         raise ValueError(f"Unknown method: {method}")
@@ -54,7 +54,6 @@ visual_data = [{'timestamp': '[22.57s]', 'text': 'arafed man in a black shirt an
 # Output: [[11.52, 13.16], [96.68, 97.26], [238.49, 241.28]]
 
 # Example 2: Learning Method B → use visual timestamps
-print(extract_timestamps_by_method("Learning Method B", audio_data, visual_data))
 # Output: [[22.73, 24.23], [61.47, 62.97]]
 
 # Example 3: Cinematic Method A → also use visual timestamps

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import yt_dlp
 import subprocess
 import sys
+import shutil
 
 # ---------------- CONFIG ----------------
 load_dotenv()
@@ -76,6 +77,34 @@ def download_youtube_video_and_audio(url: str, download_dir: str = "downloads") 
     
     return video_filename, audio_filename
 
+def process_uploaded_video(video_path: str, download_dir: str = "downloads") -> tuple:
+    """
+    Process an uploaded video file: copy to download directory and extract audio.
+    Returns a tuple (local_video_path, local_audio_path)
+    """
+    Path(download_dir).mkdir(parents=True, exist_ok=True)
+    
+    # Copy the uploaded video to the download directory
+    video_filename = os.path.join(download_dir, os.path.basename(video_path))
+    shutil.copy2(video_path, video_filename)
+    
+    # Extract optimized audio for Whisper
+    audio_filename = os.path.splitext(video_filename)[0] + "_whisper.wav"
+    ffmpeg_cmd = [
+        ffmpeg_exe, "-y", "-i", video_filename,
+        "-vn",                 # no video
+        "-acodec", "pcm_s16le", # 16-bit PCM
+        "-ar", "16000",         # 16 kHz sample rate
+        "-ac", "1",             # mono
+        audio_filename
+    ]
+    subprocess.run(ffmpeg_cmd, check=True)
+    
+    print(f"[INFO] Video processed: {video_filename}")
+    print(f"[INFO] Audio extracted for Whisper: {audio_filename}")
+    
+    return video_filename, audio_filename
+
 def upload_file_to_s3(local_file_path: str, s3_key: str) -> str:
     """
     Upload a local file to S3 at the given key.
@@ -87,22 +116,37 @@ def upload_file_to_s3(local_file_path: str, s3_key: str) -> str:
     print(f"[INFO] Upload successful: {s3_url}")
     return s3_url
 
-
-def handle_youtube_upload(youtube_url: str):
+def handle_video_input(input_source: str, is_youtube: bool = True):
     """
-    Download video + audio from YouTube and upload both to S3.
+    Handle either YouTube URL or uploaded video file.
+    Download/process video + audio and upload both to S3.
+    Returns a tuple (video_path, audio_path, video_s3_url, audio_s3_url)
     """
-    local_video, local_audio = download_youtube_video_and_audio(youtube_url)
+    if is_youtube:
+        local_video, local_audio = download_youtube_video_and_audio(input_source)
+    else:
+        local_video, local_audio = process_uploaded_video(input_source)
     
     # Upload video
     video_s3_key = f"videos/{os.path.basename(local_video)}"
-    upload_file_to_s3(local_video, video_s3_key)
+    video_s3_url = upload_file_to_s3(local_video, video_s3_key)
     
     # Upload audio
     audio_s3_key = f"audios/{os.path.basename(local_audio)}"
-    upload_file_to_s3(local_audio, audio_s3_key)
-
+    audio_s3_url = upload_file_to_s3(local_audio, audio_s3_key)
+    
+    return local_video, local_audio, video_s3_url, audio_s3_url
 
 # ---------------- Example usage ----------------
 if __name__ == "__main__":
-    handle_youtube_upload("https://youtu.be/DwbAW8G-57A?si=OWdY3QYwsTuFxIo6")
+    # Example 1: YouTube URL
+    youtube_url = "https://youtu.be/DwbAW8G-57A?si=OWdY3QYwsTuFxIo6"
+    video_path, audio_path, video_s3, audio_s3 = handle_video_input(youtube_url, is_youtube=True)
+    print(f"YouTube video processed: {video_path}, {audio_path}")
+    print(f"S3 URLs: {video_s3}, {audio_s3}")
+    
+    # Example 2: Uploaded file
+    # uploaded_file_path = "/path/to/uploaded/video.mp4"
+    # video_path, audio_path, video_s3, audio_s3 = handle_video_input(uploaded_file_path, is_youtube=False)
+    # print(f"Uploaded video processed: {video_path}, {audio_path}")
+    # print(f"S3 URLs: {video_s3}, {audio_s3}")

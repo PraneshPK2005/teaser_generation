@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Import your custom modules
-from get_videos_from_url import download_youtube_video_and_audio, upload_file_to_s3
+from get_videos_from_url import handle_video_input, upload_file_to_s3
 from transcribe_audio_from_whisper import transcribe_audio
 from get_description_from_blip import process_video_for_visual_description
 from clean_audio_transcripts import preprocess_audio
@@ -18,12 +18,13 @@ from making_teaser_from_timestamps import crop_and_merge_clips_ffmpeg
 # Load environment variables
 load_dotenv()
 
-def youtube_to_teaser(youtube_url, method="learning_b", output_dir="output"):
+def process_video_to_teaser(input_source, is_youtube=True, method="learning_b", output_dir="output"):
     """
-    Main workflow to generate a teaser from a YouTube URL
+    Main workflow to generate a teaser from either YouTube URL or uploaded video
     
     Args:
-        youtube_url (str): YouTube video URL
+        input_source (str): YouTube URL or local file path
+        is_youtube (bool): True if input is YouTube URL, False if local file
         method (str): One of "learning_a", "learning_b", or "cinematic_a"
         output_dir (str): Directory to save outputs
     """
@@ -31,9 +32,11 @@ def youtube_to_teaser(youtube_url, method="learning_b", output_dir="output"):
     # Create output directory
     Path(output_dir).mkdir(exist_ok=True)
     
-    print("Step 1: Downloading video and audio from YouTube...")
-    # Download video and audio
-    video_path, audio_path = download_youtube_video_and_audio(youtube_url, download_dir=output_dir)
+    print("Step 1: Processing video input...")
+    # Process video input (YouTube URL or uploaded file)
+    video_path, audio_path, video_s3_url, audio_s3_url = handle_video_input(
+        input_source, is_youtube=is_youtube
+    )
     
     print("Step 2: Transcribing audio...")
     # Transcribe audio
@@ -129,13 +132,18 @@ def youtube_to_teaser(youtube_url, method="learning_b", output_dir="output"):
         "s3_url": s3_url,
         "local_path": result["local_path"],
         "timestamps": timestamps,
-        "duration": total_duration
+        "duration": total_duration,
+        "video_s3_url": video_s3_url,
+        "audio_s3_url": audio_s3_url
     }
 
 if __name__ == "__main__":
-    # Example usage
-    youtube_url = "https://youtu.be/DwbAW8G-57A?si=OWdY3QYwsTuFxIo6"
-    method = "learning_b"  # Choose from "learning_a", "learning_b", "cinematic_a"
+    # Example usage with YouTube URL
+    # youtube_url = "https://youtu.be/DwbAW8G-57A?si=OWdY3QYwsTuFxIo6"
+    # result = process_video_to_teaser(youtube_url, is_youtube=True, method="learning_b")
+    # print(f"YouTube teaser created: {result}")
     
-    result = youtube_to_teaser(youtube_url, method)
-    print(f"Teaser created: {result}")
+    # Example usage with uploaded file
+    uploaded_file = r"P:\cts npn\practise\Terminator 2_ Judgment Day movie review.mp4"
+    result = process_video_to_teaser(uploaded_file, is_youtube=False, method="learning_b")
+    print(f"Uploaded file teaser created: {result}")

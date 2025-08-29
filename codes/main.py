@@ -1,234 +1,141 @@
+# main_workflow.py
 import os
-import sys
+import json
 from pathlib import Path
-from typing import List, Tuple
-import boto3
 from dotenv import load_dotenv
 
 # Import your custom modules
-from get_videos_from_url import download_youtube_video_and_audio, upload_file_to_s3, handle_youtube_upload
+from get_videos_from_url import download_youtube_video_and_audio, upload_file_to_s3
 from transcribe_audio_from_whisper import transcribe_audio
-from based_on_orig_transcripts import get_teaser_timestamps
+from get_description_from_blip import process_video_for_visual_description
+from clean_audio_transcripts import preprocess_audio
+from clean_visual_descriptions import preprocess_visual
+from create_embeddings_and_query import teaser_pipeline
+from get_timestamps_from_embeds_output import extract_timestamps_by_method
+from ollama_summarization_voiceover import summarize_text, create_timed_audio
 from making_teaser_from_timestamps import crop_and_merge_clips_ffmpeg
 
 # Load environment variables
 load_dotenv()
 
-class TeaserGenerator:
-    def __init__(self):
-        # Initialize S3 client
-        self.s3_client = boto3.client(
-            "s3",
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_KEY"),
-            region_name=os.getenv("AWS_REGION", "us-east-1")
+def youtube_to_teaser(youtube_url, method="learning_b", output_dir="output"):
+    """
+    Main workflow to generate a teaser from a YouTube URL
+    
+    Args:
+        youtube_url (str): YouTube video URL
+        method (str): One of "learning_a", "learning_b", or "cinematic_a"
+        output_dir (str): Directory to save outputs
+    """
+    
+    # Create output directory
+    Path(output_dir).mkdir(exist_ok=True)
+    
+    print("Step 1: Downloading video and audio from YouTube...")
+    # Download video and audio
+    video_path, audio_path = download_youtube_video_and_audio(youtube_url, download_dir=output_dir)
+    
+    print("Step 2: Transcribing audio...")
+    # Transcribe audio
+    raw_audio_transcripts = transcribe_audio(audio_path)
+    
+    print("Step 3: Generating visual descriptions...")
+    # Generate visual descriptions
+    raw_visual_descriptions = process_video_for_visual_description(video_path, output_dir=os.path.join(output_dir, "frames"))
+    
+    print("Step 4: Cleaning transcripts and descriptions...")
+    # Clean both audio and visual data
+    cleaned_audio = preprocess_audio(raw_audio_transcripts)
+    cleaned_visual = preprocess_visual(raw_visual_descriptions)
+    
+    # Save cleaned data for reference
+    with open(os.path.join(output_dir, "cleaned_audio.json"), "w") as f:
+        json.dump(cleaned_audio, f, indent=2)
+    with open(os.path.join(output_dir, "cleaned_visual.json"), "w") as f:
+        json.dump(cleaned_visual, f, indent=2)
+    
+    print("Step 5: Creating embeddings and querying for best segments...")
+    # Define queries based on method
+    if method == "learning_a":
+        audio_query = "most engaging and informative dialogue"
+        visual_query = ""  # Not used
+    elif method == "learning_b":
+        audio_query = "key points and summary"
+        visual_query = "most relevant and descriptive visuals"
+    elif method == "cinematic_a":
+        audio_query = "cinematic and dramatic audio"
+        visual_query = "most cinematic and visually appealing scenes"
+    
+    # Get results from embedding pipeline
+    audio_results, visual_results, total_duration = teaser_pipeline(
+        method, 
+        audio_data=cleaned_audio, 
+        visual_data=cleaned_visual,
+        query_audio_text=audio_query,
+        query_visual_text=visual_query
+    )
+    
+    print("Step 6: Extracting timestamps...")
+    # Extract timestamps based on method
+    timestamps = extract_timestamps_by_method(method, audio_results, visual_results)
+    
+    # Save timestamps for reference
+    with open(os.path.join(output_dir, "timestamps.json"), "w") as f:
+        json.dump(timestamps, f, indent=2)
+    
+    print(f"Total teaser duration: {total_duration:.2f} seconds")
+    
+    # Handle voiceover generation for Learning Method B
+    voiceover_path = None
+    if method == "learning_b":
+        print("Step 7: Generating voiceover summary...")
+        # Combine all audio text for summarization
+        full_transcript = " ".join([item['text'] for item in cleaned_audio])
+        
+        # Generate summary
+        summary_text = summarize_text(
+            transcript=full_transcript,
+            duration_seconds=total_duration,
+            wpm=140  # Words per minute
         )
-        self.bucket_name = os.getenv("BUCKET_NAME")
         
-        # Create directories for outputs
-        self.download_dir = "downloads"
-        self.output_dir = "outputs"
-        Path(self.download_dir).mkdir(parents=True, exist_ok=True)
-        Path(self.output_dir).mkdir(parents=True, exist_ok=True)
+        # Generate timed audio
+        voiceover_path = os.path.join(output_dir, "voiceover.mp3")
+        create_timed_audio(
+            text=summary_text,
+            duration_seconds=total_duration,
+            filename=voiceover_path
+        )
     
-    def process_youtube_video(self, youtube_url: str, expected_time: int = 45, max_sec: int = 65) -> dict:
-        """
-        Main function to process a YouTube video and generate a teaser
-        
-        Args:
-            youtube_url: URL of the YouTube video
-            expected_time: Minimum teaser duration in seconds
-            max_sec: Maximum teaser duration in seconds
-            
-        Returns:
-            Dictionary with paths and URLs of generated assets
-        """
-        result = {
-            "video_path": None,
-            "audio_path": None,
-            "transcription": None,
-            "timestamps": None,
-            "teaser_path": None,
-            "teaser_s3_url": None
-        }
-        
-        try:
-            print(f"Step 1: Downloading video from {youtube_url}")
-            # Download video and audio
-            video_path, audio_path = download_youtube_video_and_audio(youtube_url, self.download_dir)
-            result["video_path"] = video_path
-            result["audio_path"] = audio_path
-            
-            print("Step 2: Uploading to S3")
-            # Upload to S3
-            video_filename = os.path.basename(video_path)
-            audio_filename = os.path.basename(audio_path)
-            
-            video_s3_key = f"videos/{video_filename}"
-            audio_s3_key = f"audios/{audio_filename}"
-            
-            upload_file_to_s3(video_path, video_s3_key)
-            upload_file_to_s3(audio_path, audio_s3_key)
-            
-            print("Step 3: Transcribing audio")
-            # Transcribe audio
-            transcription = transcribe_audio(audio_path)
-            result["transcription"] = transcription
-            
-            print("Step 4: Generating teaser timestamps")
-            # Generate teaser timestamps
-            timestamps = get_teaser_timestamps(transcription, expected_time, max_sec)
-            result["timestamps"] = timestamps
-            
-            # Calculate total duration for verification
-            total_duration = sum(end - start for start, end in timestamps)
-            print(f"Selected {len(timestamps)} segments with total duration: {total_duration:.2f}s")
-            
-            print("Step 5: Creating teaser video")
-            # Create teaser video
-            teaser_filename = f"teaser_{os.path.splitext(video_filename)[0]}.mp4"
-            teaser_path = os.path.join(self.output_dir, teaser_filename)
-            
-            teaser_result = crop_and_merge_clips_ffmpeg(
-                video_path=video_path,
-                timestamps=timestamps,
-                output_path=teaser_path,
-                upload_to_s3=True,
-                s3_key=f"teasers/{teaser_filename}"
-            )
-            
-            result["teaser_path"] = teaser_result["local_path"]
-            result["teaser_s3_url"] = teaser_result["s3_url"]
-            
-            print(f"Teaser generation complete! Saved to: {teaser_result['local_path']}")
-            if teaser_result["s3_url"]:
-                print(f"Uploaded to S3: {teaser_result['s3_url']}")
-                
-        except Exception as e:
-            print(f"Error processing video: {e}")
-            import traceback
-            traceback.print_exc()
-            
-        return result
+    print("Step 8: Creating final teaser...")
+    # Create final teaser video
+    teaser_output = os.path.join(output_dir, "teaser_output.mp4")
     
-    def process_local_video(self, video_path: str, expected_time: int = 45, max_sec: int = 65) -> dict:
-        """
-        Process a local video file and generate a teaser
-        
-        Args:
-            video_path: Path to the local video file
-            expected_time: Minimum teaser duration in seconds
-            max_sec: Maximum teaser duration in seconds
-            
-        Returns:
-            Dictionary with paths and URLs of generated assets
-        """
-        result = {
-            "video_path": video_path,
-            "audio_path": None,
-            "transcription": None,
-            "timestamps": None,
-            "teaser_path": None,
-            "teaser_s3_url": None
-        }
-        
-        try:
-            # Extract audio from video
-            print("Step 1: Extracting audio from video")
-            audio_filename = os.path.splitext(os.path.basename(video_path))[0] + "_whisper.wav"
-            audio_path = os.path.join(self.download_dir, audio_filename)
-            
-            # Use FFmpeg to extract audio
-            import subprocess
-            ffmpeg_cmd = [
-                "ffmpeg", "-y", "-i", video_path,
-                "-vn",                 # no video
-                "-acodec", "pcm_s16le", # 16-bit PCM
-                "-ar", "16000",         # 16 kHz sample rate
-                "-ac", "1",             # mono
-                audio_path
-            ]
-            subprocess.run(ffmpeg_cmd, check=True)
-            
-            result["audio_path"] = audio_path
-            
-            print("Step 2: Uploading to S3")
-            # Upload to S3
-            video_filename = os.path.basename(video_path)
-            audio_filename = os.path.basename(audio_path)
-            
-            video_s3_key = f"videos/{video_filename}"
-            audio_s3_key = f"audios/{audio_filename}"
-            
-            upload_file_to_s3(video_path, video_s3_key)
-            upload_file_to_s3(audio_path, audio_s3_key)
-            
-            print("Step 3: Transcribing audio")
-            # Transcribe audio
-            transcription = transcribe_audio(audio_path)
-            result["transcription"] = transcription
-            
-            print("Step 4: Generating teaser timestamps")
-            # Generate teaser timestamps
-            timestamps = get_teaser_timestamps(transcription, expected_time, max_sec)
-            result["timestamps"] = timestamps
-            
-            # Calculate total duration for verification
-            total_duration = sum(end - start for start, end in timestamps)
-            print(f"Selected {len(timestamps)} segments with total duration: {total_duration:.2f}s")
-            
-            print("Step 5: Creating teaser video")
-            # Create teaser video
-            teaser_filename = f"teaser_{os.path.splitext(video_filename)[0]}.mp4"
-            teaser_path = os.path.join(self.output_dir, teaser_filename)
-            
-            teaser_result = crop_and_merge_clips_ffmpeg(
-                video_path=video_path,
-                timestamps=timestamps,
-                output_path=teaser_path,
-                upload_to_s3=True,
-                s3_key=f"teasers/{teaser_filename}"
-            )
-            
-            result["teaser_path"] = teaser_result["local_path"]
-            result["teaser_s3_url"] = teaser_result["s3_url"]
-            
-            print(f"Teaser generation complete! Saved to: {teaser_result['local_path']}")
-            if teaser_result["s3_url"]:
-                print(f"Uploaded to S3: {teaser_result['s3_url']}")
-                
-        except Exception as e:
-            print(f"Error processing video: {e}")
-            import traceback
-            traceback.print_exc()
-            
-        return result
-
-def main():
-    """
-    Main function to demonstrate the teaser generation process
-    """
-    generator = TeaserGenerator()
+    result = crop_and_merge_clips_ffmpeg(
+        video_path=video_path,
+        timestamps=timestamps,
+        output_path=teaser_output,
+        method=method,
+        external_audio_path=voiceover_path
+    )
     
-    # Example usage with YouTube URL
-    youtube_url = "https://youtu.be/DwbAW8G-57A?si=OWdY3QYwsTuFxIo6"
-    expected_time = 45
-    max_sec = 65
+    print("Step 9: Uploading to S3...")
+    # Upload to S3
+    s3_key = f"teasers/{os.path.basename(teaser_output)}"
+    s3_url = upload_file_to_s3(teaser_output, s3_key)
     
-    print("Starting YouTube video processing...")
-    result = generator.process_youtube_video(youtube_url, expected_time, max_sec)
-    
-    # Print results
-    print("\n=== PROCESSING RESULTS ===")
-    print(f"Original video: {result.get('video_path', 'N/A')}")
-    print(f"Extracted audio: {result.get('audio_path', 'N/A')}")
-    print(f"Teaser created: {result.get('teaser_path', 'N/A')}")
-    print(f"Teaser S3 URL: {result.get('teaser_s3_url', 'N/A')}")
-    
-    # Example with local video file
-    # local_video_path = "path/to/your/local/video.mp4"
-    # print("\nStarting local video processing...")
-    # result = generator.process_local_video(local_video_path, expected_time, max_sec)
+    print(f"Teaser generation complete! Download at: {s3_url}")
+    return {
+        "s3_url": s3_url,
+        "local_path": result["local_path"],
+        "timestamps": timestamps,
+        "duration": total_duration
+    }
 
 if __name__ == "__main__":
-    main()
+    # Example usage
+    youtube_url = "https://youtu.be/DwbAW8G-57A?si=OWdY3QYwsTuFxIo6"
+    method = "learning_b"  # Choose from "learning_a", "learning_b", "cinematic_a"
+    
+    result = youtube_to_teaser(youtube_url, method)
+    print(f"Teaser created: {result}")

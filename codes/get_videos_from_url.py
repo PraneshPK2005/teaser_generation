@@ -116,6 +116,21 @@ def upload_file_to_s3(local_file_path: str, s3_key: str) -> str:
     print(f"[INFO] Upload successful: {s3_url}")
     return s3_url
 
+def upload_teaser_to_s3(teaser_path: str) -> str:
+    """
+    Upload the final teaser video to S3 under the 'teasers/' prefix.
+    Returns the public HTTPS URL of the uploaded teaser.
+    """
+    teaser_key = f"teasers/{os.path.basename(teaser_path)}"
+    print(f"[INFO] Uploading teaser {teaser_path} to s3://{BUCKET_NAME}/{teaser_key}")
+
+    s3_client.upload_file(teaser_path, BUCKET_NAME, teaser_key)
+
+    teaser_url = f"https://{BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{teaser_key}"
+    print(f"[INFO] Teaser uploaded successfully: {teaser_url}")
+    
+    return teaser_url
+
 def handle_video_input(input_source: str, is_youtube: bool = True):
     """
     Handle either YouTube URL or uploaded video file.

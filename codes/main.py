@@ -3,9 +3,10 @@ import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Import your custom modules
-from get_videos_from_url import handle_video_input, upload_file_to_s3
+from get_videos_from_url import handle_video_input, upload_teaser_to_s3
 from transcribe_audio_from_whisper import transcribe_audio
 from get_description_from_blip import process_video_for_visual_description
 from clean_audio_transcripts import preprocess_audio
@@ -17,6 +18,7 @@ from making_teaser_from_timestamps import crop_and_merge_clips_ffmpeg
 
 # Load environment variables
 load_dotenv()
+
 
 def process_video_to_teaser(input_source, is_youtube=True, method="learning_b", output_dir="output"):
     """
@@ -122,20 +124,23 @@ def process_video_to_teaser(input_source, is_youtube=True, method="learning_b", 
         external_audio_path=voiceover_path
     )
     
-    print("Step 9: Uploading to S3...")
-    # Upload to S3
-    s3_key = f"teasers/{os.path.basename(teaser_output)}"
-    s3_url = upload_file_to_s3(teaser_output, s3_key)
-    
-    print(f"Teaser generation complete! Download at: {s3_url}")
+    print("Step 9: Uploading final teaser to S3...")
+
+# Upload teaser using the new function
+    final_teaser_url = upload_teaser_to_s3(teaser_output)
+
+    print(f"Teaser generation complete! Download at: {final_teaser_url}")
+
     return {
-        "s3_url": s3_url,
-        "local_path": result["local_path"],
-        "timestamps": timestamps,
-        "duration": total_duration,
-        "video_s3_url": video_s3_url,
-        "audio_s3_url": audio_s3_url
-    }
+    "s3_url": final_teaser_url,
+    "local_path": result["local_path"],
+    "timestamps": timestamps,
+    "duration": total_duration,
+    "video_s3_url": video_s3_url,
+    "audio_s3_url": audio_s3_url
+}
+
+
 
 if __name__ == "__main__":
     # Example usage with YouTube URL
@@ -144,6 +149,8 @@ if __name__ == "__main__":
     # print(f"YouTube teaser created: {result}")
     
     # Example usage with uploaded file
-    uploaded_file = r"P:\cts npn\practise\Terminator 2_ Judgment Day movie review.mp4"
+    print("start time", datetime.now().strftime("%H:%M:%S"))
+    uploaded_file = r"P:\cts npn\practise\phy_video.mp4"
     result = process_video_to_teaser(uploaded_file, is_youtube=False, method="learning_b")
+    print("end time", datetime.now().strftime("%H:%M:%S"))
     print(f"Uploaded file teaser created: {result}")

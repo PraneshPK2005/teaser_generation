@@ -107,7 +107,7 @@ def parse_visual_timestamp(ts: str):
 # -------------------------------
 # Function to estimate top_k dynamically
 # -------------------------------
-def estimate_top_k(method, audio_data, visual_data=None, min_length=20, max_length=30):
+def estimate_top_k(method, audio_data, visual_data=None, max_length=None, min_length=None):
     """
     Returns top_audio, top_visual based on method and average durations
     """
@@ -142,7 +142,7 @@ def estimate_top_k(method, audio_data, visual_data=None, min_length=20, max_leng
 # -----------------------------
 # Dynamic Teaser Embedding Pipeline
 # -----------------------------
-def teaser_pipeline(method, audio_data=None, visual_data=None, query_audio_text="best sentence for teaser", query_visual_text="best visuals for teaser"):
+def teaser_pipeline(method, max_length, min_length,audio_data=None, visual_data=None, query_audio_text="best sentence for teaser", query_visual_text="best visuals for teaser"):
     """
     method: str, one of 'learning_a', 'learning_b', 'cinematic_a'
     audio_data, visual_data: list of dicts with keys 'timestamp' and 'text'
@@ -157,7 +157,7 @@ def teaser_pipeline(method, audio_data=None, visual_data=None, query_audio_text=
         # Only audio
         create_index(audio_data, "audio_index.faiss", "audio_mapping.json")
         audio_index, audio_mapping = load_index("audio_index.faiss", "audio_mapping.json")
-        top_audio, top_visual = estimate_top_k(method, audio_data)
+        top_audio, top_visual = estimate_top_k(method,max_length,min_length, audio_data)
         
         # Calculate total duration for audio method
         audio_durations = [parse_audio_timestamp(d['timestamp']) for d in audio_data]
@@ -169,7 +169,7 @@ def teaser_pipeline(method, audio_data=None, visual_data=None, query_audio_text=
         create_index(visual_data, "visual_index.faiss", "visual_mapping.json")
         audio_index, audio_mapping = load_index("audio_index.faiss", "audio_mapping.json")
         visual_index, visual_mapping = load_index("visual_index.faiss", "visual_mapping.json")
-        top_audio, top_visual = estimate_top_k(method, audio_data, visual_data)
+        top_audio, top_visual = estimate_top_k(method,max_length,min_length, audio_data, visual_data)
         
         # Calculate total duration for learning_b (based on visual segments)
         total_duration = top_visual * 1.5  # Each visual segment is 1.5 seconds
@@ -180,7 +180,7 @@ def teaser_pipeline(method, audio_data=None, visual_data=None, query_audio_text=
         create_index(visual_data, "visual_index.faiss", "visual_mapping.json")
         audio_index, audio_mapping = load_index("audio_index.faiss", "audio_mapping.json")
         visual_index, visual_mapping = load_index("visual_index.faiss", "visual_mapping.json")
-        top_audio, top_visual = estimate_top_k(method, audio_data, visual_data)
+        top_audio, top_visual = estimate_top_k(method,max_length,min_length, audio_data, visual_data)
         
         # Calculate total duration for cinematic_a (based on visual segments)
         total_duration = top_visual * 1.5  # Each visual segment is 1.5 seconds

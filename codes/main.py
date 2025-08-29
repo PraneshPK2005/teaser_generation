@@ -20,7 +20,7 @@ from making_teaser_from_timestamps import crop_and_merge_clips_ffmpeg
 load_dotenv()
 
 
-def process_video_to_teaser(input_source, is_youtube=True, method="learning_b", output_dir="output"):
+def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtube=True, method="learning_b", output_dir="output"):
     """
     Main workflow to generate a teaser from either YouTube URL or uploaded video
     
@@ -74,6 +74,8 @@ def process_video_to_teaser(input_source, is_youtube=True, method="learning_b", 
     # Get results from embedding pipeline
     audio_results, visual_results, total_duration = teaser_pipeline(
         method, 
+        max_length=max_length,
+        min_length=min_length,
         audio_data=cleaned_audio, 
         visual_data=cleaned_visual,
         query_audio_text=audio_query,

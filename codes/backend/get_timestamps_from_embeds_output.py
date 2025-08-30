@@ -34,7 +34,10 @@ def extract_timestamps_by_method(method, audio_results, visual_results):
                 start = float(match[0])
                 ts.append([start, start + 1.5])
         return ts
-
+    if method == "gemini":
+        # This shouldn't be called for gemini method in the main workflow
+        # as we're handling it differently
+        raise ValueError("Gemini method should be handled separately")
     if method == "learning_a":
         timestamps = get_audio()
     elif method in ["learning_b", "cinematic_a"]:

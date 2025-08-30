@@ -95,7 +95,7 @@ def crop_and_merge_clips_ffmpeg(
     _validate_timestamps(timestamps)  # keep the exact order provided (no sorting!)
     temp_segment_paths = []
 
-    if method in ["learning_a", "cinematic_a"]:
+    if method in ["learning_a", "cinematic_a", "gemini"]:
         # Make A/V clips per timestamp (preserve original audio), then concat.
         for idx, (start, end) in enumerate(timestamps):
             print(f"[INFO] Cutting A/V clip {idx+1}/{len(timestamps)}: {start}-{end}s")

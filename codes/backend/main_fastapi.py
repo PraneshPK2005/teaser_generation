@@ -73,7 +73,7 @@ async def generate_teaser(
         )
     
     # Validate method
-    valid_methods = ["learning_a", "learning_b", "cinematic_a"]
+    valid_methods = ["learning_a", "learning_b", "cinematic_a", "gemini"]
     if method not in valid_methods:
         raise HTTPException(
             status_code=400, 

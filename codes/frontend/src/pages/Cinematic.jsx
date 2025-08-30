@@ -120,6 +120,7 @@ const handleSubmit = async (e) => {
               className="w-full p-2 border border-gray-300 rounded-md"
             >
               <option value="cinematic_a">Cinematic Method A (Visual Appeal)</option>
+              <option value="gemini">Gemini (Balanced Approach)</option>
             </select>
           </div>
           

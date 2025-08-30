@@ -47,7 +47,7 @@ const Result = () => {
         Your Teaser is Ready!
       </h1>
       <p className="text-center text-gray-600 mb-8">
-        Duration: {result.duration} seconds
+        Duration: {result.duration || 'N/A'} seconds
       </p>
       
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
@@ -79,47 +79,78 @@ const Result = () => {
           
           <div className="border-t pt-4">
             <h3 className="font-semibold text-gray-800 mb-2">Details</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Original Video:</span>
+                <span className="text-gray-600">Teaser URL: </span>
                 <a 
-                  href={result.video_s3_url} 
+                  href={result.s3_url} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline block truncate"
+                  title={result.s3_url}
                 >
-                  {result.video_s3_url}
+                  {result.s3_url}
                 </a>
               </div>
               <div>
-                <span className="text-gray-600">Audio Source:</span>
-                <a 
-                  href={result.audio_s3_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline block truncate"
-                >
-                  {result.audio_s3_url}
-                </a>
+                <span className="text-gray-600">Method: </span>
+                <span className="block truncate">{result.method || 'N/A'}</span>
               </div>
+              {result.video_s3_url && (
+                <div>
+                  <span className="text-gray-600">Original Video: </span>
+                  <a 
+                    href={result.video_s3_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline block truncate"
+                    title={result.video_s3_url}
+                  >
+                    {result.video_s3_url}
+                  </a>
+                </div>
+              )}
+              {result.audio_s3_url && (
+                <div>
+                  <span className="text-gray-600">Audio Source: </span>
+                  <a 
+                    href={result.audio_s3_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline block truncate"
+                    title={result.audio_s3_url}
+                  >
+                    {result.audio_s3_url}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
       
-      <div className="max-w-3xl mx-auto mt-8">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">Timestamps Used</h3>
-        <div className="bg-gray-100 rounded-lg p-4">
-          <ul className="space-y-2">
-            {result.timestamps && result.timestamps.map((timestamp, index) => (
-              <li key={index} className="flex justify-between text-sm">
-                <span>{timestamp.start}s - {timestamp.end}s</span>
-                <span className="text-gray-600">Duration: {timestamp.end - timestamp.start}s</span>
-              </li>
-            ))}
-          </ul>
+      {result.timestamps && result.timestamps.length > 0 && (
+        <div className="max-w-3xl mx-auto mt-8">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Timestamps Used</h3>
+          <div className="bg-gray-100 rounded-lg p-4">
+            <ul className="space-y-2">
+              {result.timestamps.map((timestamp, index) => {
+                // Handle both array format [start, end] and object format {start, end}
+                const start = Array.isArray(timestamp) ? timestamp[0] : timestamp.start;
+                const end = Array.isArray(timestamp) ? timestamp[1] : timestamp.end;
+                const duration = end - start;
+                
+                return (
+                  <li key={index} className="flex justify-between text-sm">
+                    <span>{start}s - {end}s</span>
+                    <span className="text-gray-600">Duration: {duration.toFixed(2)}s</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

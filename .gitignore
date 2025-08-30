@@ -1,1 +1,2 @@
-codes/.env
+codes/backend/.env
+codes/frontend/node_modules

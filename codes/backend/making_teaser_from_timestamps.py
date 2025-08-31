@@ -4,33 +4,10 @@ import subprocess
 from pathlib import Path
 
 # Import centralized configuration
-from config import FFMPEG_PATH, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, BUCKET_NAME
+from config import FFMPEG_PATH
 
 # Set FFmpeg path
 os.environ['PATH'] = FFMPEG_PATH + os.pathsep + os.environ['PATH']
-
-# Initialize S3 client
-import boto3
-s3_client = boto3.client(
-    "s3",
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY,
-    region_name=AWS_REGION
-)
-
-# ----------------------#
-# Upload to S3 function #
-# ----------------------#
-def upload_file_to_s3(local_file_path: str, s3_key: str) -> str:
-    """
-    Upload a local file to S3 at the given key.
-    Returns the S3 URL.
-    """
-    print(f"[INFO] Uploading {local_file_path} to s3://{BUCKET_NAME}/{s3_key}")
-    s3_client.upload_file(local_file_path, BUCKET_NAME, s3_key)
-    s3_url = f"https://{BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
-    print(f"[INFO] Upload successful: {s3_url}")
-    return s3_url
 
 # ----------------------#
 # Helper: Run FFmpeg    #
@@ -76,21 +53,20 @@ def _sum_durations(timestamps):
 def crop_and_merge_clips_ffmpeg(
     video_path: str,
     timestamps: list,
-    output_path: str = "merged_output.mp4",
+    output_path: str = None,
     method: str = "learning_a",
     external_audio_path: str = None
-) -> dict:
+) -> str:
     """
     Crop video segments and merge them into a single video.
-
-    Methods:
-      - 'learning_a' / 'cinematic_a': keep original audio per clip, then concat.
-      - 'learning_b': make video-only clips (in given order), concat them,
-                      then add the single external audio once to the final video
-                      (trim/pad so it never loops).
+    Returns the path to the generated teaser file.
     """
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video not found: {video_path}")
+    
+    video_name = Path(video_path).stem  # Get the base filename without extension
+    video_ext = Path(video_path).suffix  # Get the extension (e.g., .mp4)
+    output_path = output_path or f"{video_name}_teaser{video_ext}"
 
     _validate_timestamps(timestamps)  # keep the exact order provided (no sorting!)
     temp_segment_paths = []
@@ -188,13 +164,9 @@ def crop_and_merge_clips_ffmpeg(
 
     print(f"[INFO] Final video saved: {os.path.abspath(output_path)}")
 
-    # Upload to S3
-    s3_key = f"teasers/{os.path.basename(output_path)}"
-    s3_url = upload_file_to_s3(output_path, s3_key)
-
     # Cleanup temp segments
     for p in temp_segment_paths:
         if os.path.exists(p):
             os.remove(p)
 
-    return {"local_path": os.path.abspath(output_path), "s3_url": s3_url}
+    return output_path  # Return only the local path

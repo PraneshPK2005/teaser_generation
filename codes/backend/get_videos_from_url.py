@@ -6,6 +6,8 @@ import subprocess
 import sys
 import shutil
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # Import centralized configuration
 from config import FFMPEG_PATH, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, BUCKET_NAME, DOWNLOAD_DIR
@@ -79,60 +81,89 @@ def process_uploaded_video(video_path: str, download_dir: str = "downloads") -> 
     Process an uploaded video file: copy to download directory and extract audio.
     Returns a tuple (local_video_path, local_audio_path)
     """
+    # Use the provided download_dir (which will be your temp directory)
     Path(download_dir).mkdir(parents=True, exist_ok=True)
     
-    # Copy the uploaded video to the download directory
-    video_filename = os.path.join(download_dir, os.path.basename(video_path))
-    shutil.copy2(video_path, video_filename)
+    # Instead of copying, use the original path if it's already in the right directory
+    if os.path.dirname(video_path) == download_dir:
+        video_filename = video_path  # Already in the right place
+    else:
+        # Copy the uploaded video to the download directory
+        video_filename = os.path.join(download_dir, os.path.basename(video_path))
+        try:
+            shutil.copy2(video_path, video_filename)
+        except PermissionError as e:
+            print(f"Permission error copying file: {e}")
+            # If copy fails, try to use the original path directly
+            video_filename = video_path
     
     # Extract optimized audio for Whisper
-    audio_filename = os.path.splitext(video_filename)[0] + "_whisper.wav"
+    audio_filename = os.path.join(download_dir, os.path.splitext(os.path.basename(video_filename))[0] + "_whisper.wav")
+    
     ffmpeg_cmd = [
-        FFMPEG_PATH, "-y", "-i", video_filename,
+        "ffmpeg", "-y", "-i", video_filename,  # Use "ffmpeg" instead of FFMPEG_PATH
         "-vn",                 # no video
         "-acodec", "pcm_s16le", # 16-bit PCM
         "-ar", "16000",         # 16 kHz sample rate
         "-ac", "1",             # mono
         audio_filename
     ]
-    subprocess.run(ffmpeg_cmd, check=True)
     
-    print(f"[INFO] Video processed: {video_filename}")
-    print(f"[INFO] Audio extracted for Whisper: {audio_filename}")
-    
-    return video_filename, audio_filename
+    try:
+        result = subprocess.run(ffmpeg_cmd, check=True, capture_output=True, text=True)
+        print(f"[INFO] Video processed: {video_filename}")
+        print(f"[INFO] Audio extracted for Whisper: {audio_filename}")
+        return video_filename, audio_filename
+    except subprocess.CalledProcessError as e:
+        print(f"FFmpeg error: {e}")
+        print(f"FFmpeg stderr: {e.stderr}")
+        raise PermissionError(f"FFmpeg failed to process video: {e.stderr}")
 
+def get_timestamp_string():
+    """Generate a timestamp string in IST in the format DDMMYYYY_HHMM"""
+    now = datetime.now(ZoneInfo("Asia/Kolkata"))
+    return now.strftime("%d%m%Y_%H%M")
 def upload_file_to_s3(local_file_path: str, s3_key: str) -> str:
     """
     Upload a local file to S3 at the given key.
-    Returns the S3 URL.
+    Returns the S3 object URL (https format).
     """
     print(f"[INFO] Uploading {local_file_path} to s3://{BUCKET_NAME}/{s3_key}")
     s3_client.upload_file(local_file_path, BUCKET_NAME, s3_key)
-    s3_url = f"s3://{BUCKET_NAME}/{s3_key}"
-    print(f"[INFO] Upload successful: {s3_url}")
-    return s3_url
+    
+    # Return object URL instead of S3 URI
+    object_url = f"https://{BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{s3_key}"
+    print(f"[INFO] Upload successful: {object_url}")
+    return object_url
+
 
 def handle_video_input(input_source: str, is_youtube: bool = True):
     """
     Handle either YouTube URL or uploaded video file.
     Download/process video + audio and upload both to S3.
-    Returns a tuple (video_path, audio_path, video_s3_url, audio_s3_url)
+    Returns a tuple (video_path, audio_path, video_s3_url, audio_s3_url, base_filename)
     """
     if is_youtube:
         local_video, local_audio = download_youtube_video_and_audio(input_source)
     else:
         local_video, local_audio = process_uploaded_video(input_source)
     
-    # Upload video
-    video_s3_key = f"videos/{os.path.basename(local_video)}"
+    # Get base filename without extension and current timestamp
+    base_filename = os.path.splitext(os.path.basename(local_video))[0]
+    timestamp_str = get_timestamp_string()
+    filename_with_timestamp = f"{base_filename}_{timestamp_str}"
+    
+    # Upload video with timestamp
+    video_ext = os.path.splitext(local_video)[1]
+    video_s3_key = f"videos/{filename_with_timestamp}{video_ext}"
     video_s3_url = upload_file_to_s3(local_video, video_s3_key)
     
-    # Upload audio
-    audio_s3_key = f"audios/{os.path.basename(local_audio)}"
+    # Upload audio with timestamp
+    audio_ext = os.path.splitext(local_audio)[1]
+    audio_s3_key = f"audios/{filename_with_timestamp}_whisper{audio_ext}"
     audio_s3_url = upload_file_to_s3(local_audio, audio_s3_key)
     
-    return local_video, local_audio, video_s3_url, audio_s3_url
+    return local_video, local_audio, video_s3_url, audio_s3_url, filename_with_timestamp
 
 # ---------------- Example usage ----------------
 if __name__ == "__main__":

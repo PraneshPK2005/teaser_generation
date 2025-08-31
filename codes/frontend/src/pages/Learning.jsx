@@ -1,4 +1,3 @@
-// pages/Learning.jsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import VideoInput from '../components/VideoInput'
@@ -23,38 +22,41 @@ const Learning = () => {
     }))
   }
 
-  // In both Learning.jsx and Cinematic.jsx, update the handleSubmit function
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
   e.preventDefault()
   setIsProcessing(true)
-  
+
   try {
-    // Prepare form data for API call
     const submitData = new FormData()
     submitData.append('method', formData.method)
     submitData.append('max_length', formData.maxLength)
     submitData.append('min_length', formData.minLength)
-    
+
     if (formData.source === 'youtube') {
       submitData.append('youtube_url', formData.youtubeUrl)
     } else {
       submitData.append('video_file', formData.videoFile)
     }
 
-    // Call FastAPI endpoint
-    const response = await fetch('http://127.0.0.1:8000/generate-teaser', {
+
+    // Debug: Log data to verify before sending
+    for (let [key, value] of submitData.entries()) {
+      console.log(`${key}: ${value}`)
+    }
+
+    const response = await fetch('http://localhost:8000/generate-teaser', {
       method: 'POST',
-      body: submitData
+      body: submitData,
+      credentials: 'include',
     })
-    
+
     if (!response.ok) {
       const errorData = await response.json()
+      console.error('Backend error:', errorData)
       throw new Error(errorData.detail || 'Failed to generate teaser')
     }
-    
+
     const result = await response.json()
-    
-    // Navigate to result page with the response
     navigate('/result', { state: { result } })
   } catch (error) {
     console.error('Error generating teaser:', error)
@@ -64,22 +66,22 @@ const handleSubmit = async (e) => {
   }
 }
 
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 py-10 px-6 flex flex-col items-center">
+      <h1 className="text-4xl font-bold text-blue-800 mb-6">
         Learning Teaser Generator
       </h1>
-      
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+
+      <div className="w-full max-w-3xl bg-white shadow-lg rounded-2xl p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <VideoInput 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
+          {/* Video Input */}
+          <VideoInput formData={formData} handleInputChange={handleInputChange} />
+
+          {/* Length Controls */}
+          <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Maximum Length (seconds)
               </label>
               <input
@@ -87,14 +89,14 @@ const handleSubmit = async (e) => {
                 name="maxLength"
                 value={formData.maxLength}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                 min="10"
                 max="300"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Minimum Length (seconds)
               </label>
               <input
@@ -102,46 +104,52 @@ const handleSubmit = async (e) => {
                 name="minLength"
                 value={formData.minLength}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
                 min="5"
                 max="120"
               />
             </div>
           </div>
-          
+
+          {/* Method Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Processing Method
             </label>
             <select
               name="method"
               value={formData.method}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
             >
               <option value="learning_a">Learning Method A (Engaging Dialogue)</option>
               <option value="learning_b">Learning Method B (Key Points & Summary)</option>
             </select>
           </div>
-          
+
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={isProcessing}
-            className={`w-full py-3 px-4 rounded-md text-white font-medium ${
-              isProcessing ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+            className={`w-full py-3 rounded-lg font-semibold text-white shadow-md transition duration-300 ${
+              isProcessing
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             {isProcessing ? 'Processing...' : 'Generate Learning Teaser'}
           </button>
         </form>
       </div>
-      
-      <div className="max-w-2xl mx-auto mt-8 bg-blue-50 p-4 rounded-lg">
-        <h3 className="font-semibold text-blue-800 mb-2">About Learning Teasers</h3>
-        <p className="text-blue-700">
-          Learning teasers are perfect for educational content. They focus on extracting 
-          key concepts, summaries, and the most informative parts of your video to create 
-          compelling previews that educate and engage viewers.
+
+      {/* About Section */}
+      <div className="w-full max-w-3xl mt-8 bg-blue-50 border border-blue-200 rounded-2xl shadow-md p-6 text-center">
+        <h3 className="text-lg font-semibold text-blue-700 mb-2">
+          About Learning Teasers
+        </h3>
+        <p className="text-gray-700">
+          Learning teasers are perfect for educational content. They highlight key concepts
+          and summaries to create engaging and informative previews for your audience.
         </p>
       </div>
     </div>

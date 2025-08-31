@@ -8,7 +8,7 @@ from datetime import datetime
 from config import OUTPUT_DIR, FRAMES_DIR
 
 # Import your custom modules
-from get_videos_from_url import handle_video_input
+from get_videos_from_url import handle_video_input, upload_file_to_s3
 from transcribe_audio_from_whisper import transcribe_audio
 from get_description_from_blip import process_video_for_visual_description
 from clean_audio_transcripts import preprocess_audio
@@ -28,7 +28,7 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
     
     print("Step 1: Processing video input...")
     # Process video input (YouTube URL or uploaded file)
-    video_path, audio_path, video_s3_url, audio_s3_url = handle_video_input(
+    video_path, audio_path, video_s3_url, audio_s3_url, base_filename = handle_video_input(
         input_source, is_youtube=is_youtube
     )
     
@@ -43,7 +43,6 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
     if method == "gemini":
         print("Step 2: Generating timestamps with Gemini...")
         # Generate timestamps using Gemini
-# Generate timestamps using Gemini - CAPTURE BOTH RETURN VALUES
         timestamps, total_duration = generate_timestamps_with_gemini(video_path, max_length, min_length)        
         # Save timestamps for reference
         with open(os.path.join(output_dir, "timestamps.json"), "w") as f:
@@ -55,7 +54,7 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
         print("Step 8: Creating final teaser...")
         teaser_output = os.path.join(output_dir, "teaser_output.mp4")
         
-        result = crop_and_merge_clips_ffmpeg(
+        local_teaser_path = crop_and_merge_clips_ffmpeg(
             video_path=video_path,
             timestamps=timestamps,
             output_path=teaser_output,
@@ -118,6 +117,7 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
         
         # Handle voiceover generation for Learning Method B
         voiceover_path = None
+        summary_text = None
         if method == "learning_b":
             print("Step 7: Generating voiceover summary...")
             # Combine all audio text for summarization
@@ -142,7 +142,7 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
         # Create final teaser video
         teaser_output = os.path.join(output_dir, "teaser_output.mp4")
         
-        result = crop_and_merge_clips_ffmpeg(
+        local_teaser_path = crop_and_merge_clips_ffmpeg(
             video_path=video_path,
             timestamps=timestamps,
             output_path=teaser_output,
@@ -151,26 +151,20 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
         )
     
     print("Step 9: Uploading final teaser to S3...")
-# The crop_and_merge_clips_ffmpeg function already uploaded to S3 and returned the URL
-    final_teaser_url = result["s3_url"]
+    # Upload the teaser to S3 with the appropriate name
+    teaser_s3_key = f"teasers/{base_filename}_teaser.mp4"
+    teaser_s3_url = upload_file_to_s3(local_teaser_path, teaser_s3_key)
 
-    print(f"Teaser generation complete! Download at: {final_teaser_url}")
+    print(f"Teaser generation complete! Download at: {teaser_s3_url}")
 
     return {
-        "s3_url": final_teaser_url,
-        "local_path": result["local_path"],  # Use the local path from result
+        "s3_url": teaser_s3_url,
+        "local_path": local_teaser_path,
         "timestamps": timestamps,
         "duration": total_duration,
         "video_s3_url": video_s3_url,
         "audio_s3_url": audio_s3_url,
+        "summary": summary_text if method == "learning_b" else None,
         "method": method,
         "status": "success"
     }
-
-if __name__ == "__main__":
-    # Example usage with YouTube URL
-    youtube_url = "https://www.youtube.com/watch?app=desktop&v=teOwJWveEkE"
-    print("start time", datetime.now().strftime("%H:%M:%S"))
-    result = process_video_to_teaser(youtube_url, is_youtube=True, method="cinematic_a")
-    print(f"YouTube teaser created: {result}")
-    print("end time", datetime.now().strftime("%H:%M:%S"))

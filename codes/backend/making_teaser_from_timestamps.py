@@ -71,7 +71,7 @@ def crop_and_merge_clips_ffmpeg(
     _validate_timestamps(timestamps)  # keep the exact order provided (no sorting!)
     temp_segment_paths = []
 
-    if method in ["learning_a", "cinematic_a", "gemini"]:
+    if method in ["learning_a", "gemini"]:
         # Make A/V clips per timestamp (preserve original audio), then concat.
         for idx, (start, end) in enumerate(timestamps):
             print(f"[INFO] Cutting A/V clip {idx+1}/{len(timestamps)}: {start}-{end}s")
@@ -105,7 +105,7 @@ def crop_and_merge_clips_ffmpeg(
         if os.path.exists(list_file):
             os.remove(list_file)
 
-    elif method == "learning_b":
+    elif method in ["learning_b", "cinematic_a"]:
         if not external_audio_path or not os.path.exists(external_audio_path):
             raise ValueError("For 'learning_b', a valid external_audio_path must be provided.")
 

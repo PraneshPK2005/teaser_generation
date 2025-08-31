@@ -3,12 +3,12 @@ import re
 def extract_timestamps_by_method(method, audio_results, visual_results):
     """
     Extract timestamps based on method type.
-    
+
     Args:
         method (str): 'Learning Method A', 'Learning Method B', or 'Cinematic Method A'
         audio_results (list): [{'timestamp': '[x.xx - y.yy]', 'text': '...'}]
         visual_results (list): [{'timestamp': '[x.xx]', 'text': '...'}]
-    
+
     Returns:
         list: [[start, end], ...]
     """
@@ -34,19 +34,20 @@ def extract_timestamps_by_method(method, audio_results, visual_results):
                 start = float(match[0])
                 ts.append([start, start + 1.5])
         return ts
+
     if method == "gemini":
-        # This shouldn't be called for gemini method in the main workflow
-        # as we're handling it differently
         raise ValueError("Gemini method should be handled separately")
-    if method == "learning_a":
+    elif method == "learning_a":
         timestamps = get_audio()
     elif method in ["learning_b", "cinematic_a"]:
+        # Use only visual timestamps like learning_b
         timestamps = get_visual()
     else:
         raise ValueError(f"Unknown method: {method}")
 
     # Sort timestamps by start time
-    return timestamps
+    return sorted(timestamps, key=lambda x: x[0])
+
 
 
 audio_data = [{'timestamp': '[238.49s - 241.28s]', 'text': 'Terminator 2 Judgment Day ends Terminator lore for me.'}, {'timestamp': '[142.64s - 146.24s]', 'text': "Then T-1000 chases John Connor on foot, then he gets in a semi and he's going after John"}, {'timestamp': '[73.18s - 76.36s]', 'text': 'A hand-to-hand fight will be Terminator going boom, dun dun dun dun.'}, {'timestamp': '[249.02s - 252.98s]', 'text': 'And in Terminator 2, being one of my favorite movies of all time, if I were to make a top'}, {'timestamp': '[165.60s - 168.72s]', 'text': 'her with knowledge and let her know that the human race is going to be incinerated and'}, {'timestamp': '[64.30s - 67.58s]', 'text': "There's so much I about Terminator 2 1, it's exciting as hell."}, {'timestamp': '[245.54s - 248.90s]', 'text': "It'll be light entertainment at best, but in the end, it ends at Terminator 2."}, {'timestamp': '[155.68s - 159.98s]', 'text': 'And above it being exciting and having this revolutionary T-1000 character, the human'}, {'timestamp': '[96.68s - 97.26s]', 'text': 'put in a movie.'}, {'timestamp': '[11.52s - 13.16s]', 'text': 'Terminator 2, Judgment Day.'}, {'timestamp': '[263.92s - 267.60s]', 'text': 'If someone had a gun to my head and was , best Cameron movie ever, you have to say one,'}, {'timestamp': '[271.30s - 274.64s]', 'text': 'So your favorite Terminator movie out there, you gotta have one.'}, {'timestamp': '[116.54s - 120.33s]', 'text': "You go to anyone and you're , oh, iconic T-1000 moment, they're , I have to pick one?"}]

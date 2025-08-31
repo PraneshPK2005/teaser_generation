@@ -85,14 +85,15 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
         print("Step 5: Creating embeddings and querying for best segments...")
         # Define queries based on method
         if method == "learning_a":
-            audio_query = "most engaging and informative dialogue"
+            audio_query = "Extract the most impactful and meaningful speech segments from the audio transcript that can create a strong teaser. Prioritize moments of high engagement, including welcoming introductions and send-off or closing remarks."
             visual_query = ""  # Not used
         elif method == "learning_b":
             audio_query = "key points and summary"
-            visual_query = "most relevant and descriptive visuals"
+            visual_query = "Identify the most visually striking and dramatic scenes suitable for a teaser. Focus on visually engaging and attention-grabbing moments that are cinematic and memorable."
         elif method == "cinematic_a":
-            audio_query = "cinematic and dramatic audio"
-            visual_query = "most cinematic and visually appealing scenes"
+            audio_query = "Key points and summary for teaser."
+            visual_query = "Identify the most visually striking and dramatic scenes suitable for a teaser. Focus on visually engaging and attention-grabbing moments that are cinematic and memorable."
+
         
         # Get results from embedding pipeline
         audio_results, visual_results, total_duration = teaser_pipeline(
@@ -118,7 +119,7 @@ def process_video_to_teaser(input_source, max_length=70, min_length=60, is_youtu
         # Handle voiceover generation for Learning Method B
         voiceover_path = None
         summary_text = None
-        if method == "learning_b":
+        if method in ["learning_b","cinematic_a"]:
             print("Step 7: Generating voiceover summary...")
             # Combine all audio text for summarization
             full_transcript = " ".join([item['text'] for item in cleaned_audio])

@@ -90,7 +90,7 @@ const Result = () => {
               <Download className="w-5 h-5 mr-2" /> Download Teaser
             </a>
             <Link
-              to="/"
+              to="/home"
               className="flex items-center justify-center flex-1 px-6 py-4 bg-gray-700/50 backdrop-blur-sm rounded-xl hover:bg-gray-700 transition-all font-semibold shadow-lg hover:shadow-xl border border-gray-600/30"
             >
               <ArrowLeft className="w-5 h-5 mr-2" /> Create Another

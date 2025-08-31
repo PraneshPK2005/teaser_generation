@@ -9,7 +9,7 @@ AI Teaser Generator is a full-stack web application that uses AI-driven analysis
 graph TB
     %% Frontend Layer
     subgraph Frontend [React Frontend]
-        **A[🖥️ Landing Page]
+        A[🖥️ Landing Page]
         B[🔐 Login/Signup]
         C[🏠 Home Dashboard]
         D[🎬 Cinematic Mode]

@@ -1,3 +1,4 @@
+// pages/Learning.jsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import VideoInput from '../components/VideoInput'
@@ -23,65 +24,74 @@ const Learning = () => {
   }
 
   const handleSubmit = async (e) => {
-  e.preventDefault()
-  setIsProcessing(true)
+    e.preventDefault()
+    setIsProcessing(true)
 
-  try {
-    const submitData = new FormData()
-    submitData.append('method', formData.method)
-    submitData.append('max_length', formData.maxLength)
-    submitData.append('min_length', formData.minLength)
+    try {
+      const submitData = new FormData()
+      submitData.append('method', formData.method)
+      submitData.append('max_length', formData.maxLength)
+      submitData.append('min_length', formData.minLength)
 
-    if (formData.source === 'youtube') {
-      submitData.append('youtube_url', formData.youtubeUrl)
-    } else {
-      submitData.append('video_file', formData.videoFile)
+      if (formData.source === 'youtube') {
+        submitData.append('youtube_url', formData.youtubeUrl)
+      } else {
+        submitData.append('video_file', formData.videoFile)
+      }
+
+      // Debug: Log data to verify before sending
+      for (let [key, value] of submitData.entries()) {
+        console.log(`${key}: ${value}`)
+      }
+
+      const response = await fetch('http://localhost:8000/generate-teaser', {
+        method: 'POST',
+        body: submitData,
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Backend error:', errorData)
+        throw new Error(errorData.detail || 'Failed to generate teaser')
+      }
+
+      const result = await response.json()
+      navigate('/result', { state: { result } })
+    } catch (error) {
+      console.error('Error generating teaser:', error)
+      alert(`Failed to generate teaser: ${error.message}`)
+    } finally {
+      setIsProcessing(false)
     }
-
-
-    // Debug: Log data to verify before sending
-    for (let [key, value] of submitData.entries()) {
-      console.log(`${key}: ${value}`)
-    }
-
-    const response = await fetch('http://localhost:8000/generate-teaser', {
-      method: 'POST',
-      body: submitData,
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('Backend error:', errorData)
-      throw new Error(errorData.detail || 'Failed to generate teaser')
-    }
-
-    const result = await response.json()
-    navigate('/result', { state: { result } })
-  } catch (error) {
-    console.error('Error generating teaser:', error)
-    alert(`Failed to generate teaser: ${error.message}`)
-  } finally {
-    setIsProcessing(false)
   }
-}
-
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 py-10 px-6 flex flex-col items-center">
-      <h1 className="text-4xl font-bold text-blue-800 mb-6">
-        Learning Teaser Generator
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-6 flex flex-col items-center">
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
+          </svg>
+        </div>
+        <h1 className="text-4xl font-bold text-indigo-800 mb-4">
+          Learning Teaser Generator
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl">
+          Create educational teasers that highlight key concepts and summaries for your audience
+        </p>
+      </div>
 
-      <div className="w-full max-w-3xl bg-white shadow-lg rounded-2xl p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="w-full max-w-3xl bg-white shadow-2xl rounded-2xl p-8 mb-12">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Video Input */}
           <VideoInput formData={formData} handleInputChange={handleInputChange} />
 
           {/* Length Controls */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
                 Maximum Length (seconds)
               </label>
               <input
@@ -89,14 +99,14 @@ const Learning = () => {
                 name="maxLength"
                 value={formData.maxLength}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors"
                 min="10"
                 max="300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
                 Minimum Length (seconds)
               </label>
               <input
@@ -104,7 +114,7 @@ const Learning = () => {
                 name="minLength"
                 value={formData.minLength}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors"
                 min="5"
                 max="120"
               />
@@ -113,14 +123,15 @@ const Learning = () => {
 
           {/* Method Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
               Processing Method
             </label>
             <select
               name="method"
               value={formData.method}
               onChange={handleInputChange}
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400"
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors appearance-none bg-white bg-arrow-down bg-no-repeat bg-right-4 bg-[length:20px]"
+              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234B5563'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")" }}
             >
               <option value="learning_a">Learning Method A (Engaging Dialogue)</option>
               <option value="learning_b">Learning Method B (Key Points & Summary)</option>
@@ -131,23 +142,31 @@ const Learning = () => {
           <button
             type="submit"
             disabled={isProcessing}
-            className={`w-full py-3 rounded-lg font-semibold text-white shadow-md transition duration-300 ${
+            className={`w-full py-4 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 ${
               isProcessing
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl'
             }`}
           >
-            {isProcessing ? 'Processing...' : 'Generate Learning Teaser'}
+            {isProcessing ? (
+              <div className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </div>
+            ) : 'Generate Learning Teaser'}
           </button>
         </form>
       </div>
 
       {/* About Section */}
-      <div className="w-full max-w-3xl mt-8 bg-blue-50 border border-blue-200 rounded-2xl shadow-md p-6 text-center">
-        <h3 className="text-lg font-semibold text-blue-700 mb-2">
+      <div className="w-full max-w-3xl bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl shadow-lg p-8 text-center text-white">
+        <h3 className="text-2xl font-bold mb-4">
           About Learning Teasers
         </h3>
-        <p className="text-gray-700">
+        <p className="text-blue-100 leading-relaxed">
           Learning teasers are perfect for educational content. They highlight key concepts
           and summaries to create engaging and informative previews for your audience.
         </p>

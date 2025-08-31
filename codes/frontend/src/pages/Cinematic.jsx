@@ -1,3 +1,4 @@
+// pages/Cinematic.jsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import VideoInput from '../components/VideoInput'
@@ -38,7 +39,6 @@ const Cinematic = () => {
         submitData.append('video_file', formData.videoFile)
       }
 
-
       const response = await fetch('http://localhost:8000/generate-teaser', {
         method: 'POST',
         body: submitData,
@@ -61,20 +61,30 @@ const Cinematic = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-10 px-6 flex flex-col items-center text-white">
-      <h1 className="text-4xl font-bold mb-6">
-        Cinematic Teaser Generator
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 py-12 px-6 flex flex-col items-center text-white">
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+          </svg>
+        </div>
+        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+          Cinematic Teaser Generator
+        </h1>
+        <p className="text-lg text-purple-200 max-w-2xl">
+          Capture the most visually compelling moments to create dramatic previews
+        </p>
+      </div>
 
-      <div className="w-full max-w-3xl bg-gray-800 shadow-lg rounded-2xl p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="w-full max-w-3xl bg-gray-800/50 backdrop-blur-md border border-purple-500/30 shadow-2xl rounded-2xl p-8 mb-12">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Video Input */}
           <VideoInput formData={formData} handleInputChange={handleInputChange} />
 
           {/* Length Controls */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-sm font-semibold mb-2">
+              <label className="block text-sm font-semibold mb-3 uppercase tracking-wide text-purple-200">
                 Maximum Length (seconds)
               </label>
               <input
@@ -82,14 +92,14 @@ const Cinematic = () => {
                 name="maxLength"
                 value={formData.maxLength}
                 onChange={handleInputChange}
-                className="w-full border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-purple-400"
+                className="w-full border-2 border-gray-700 rounded-xl px-4 py-3 bg-gray-900/70 text-white focus:outline-none focus:border-purple-500 transition-colors"
                 min="10"
                 max="300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">
+              <label className="block text-sm font-semibold mb-3 uppercase tracking-wide text-purple-200">
                 Minimum Length (seconds)
               </label>
               <input
@@ -97,7 +107,7 @@ const Cinematic = () => {
                 name="minLength"
                 value={formData.minLength}
                 onChange={handleInputChange}
-                className="w-full border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-purple-400"
+                className="w-full border-2 border-gray-700 rounded-xl px-4 py-3 bg-gray-900/70 text-white focus:outline-none focus:border-purple-500 transition-colors"
                 min="5"
                 max="120"
               />
@@ -106,14 +116,15 @@ const Cinematic = () => {
 
           {/* Method Selection */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
+            <label className="block text-sm font-semibold mb-3 uppercase tracking-wide text-purple-200">
               Processing Method
             </label>
             <select
               name="method"
               value={formData.method}
               onChange={handleInputChange}
-              className="w-full border border-gray-600 rounded-lg px-3 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-purple-400"
+              className="w-full border-2 border-gray-700 rounded-xl px-4 py-3 bg-gray-900/70 text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none bg-arrow-down bg-no-repeat bg-right-4 bg-[length:20px]"
+              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D8B4FE'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")" }}
             >
               <option value="cinematic_a">Cinematic Method A (Visual Appeal)</option>
               <option value="gemini">Gemini Method (Balanced Approach)</option>
@@ -124,23 +135,31 @@ const Cinematic = () => {
           <button
             type="submit"
             disabled={isProcessing}
-            className={`w-full py-3 rounded-lg font-semibold shadow-md transition duration-300 ${
+            className={`w-full py-4 rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 ${
               isProcessing
-                ? 'bg-gray-500 cursor-not-allowed'
-                : 'bg-purple-600 hover:bg-purple-700'
+                ? 'bg-gray-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-xl'
             }`}
           >
-            {isProcessing ? 'Processing...' : 'Generate Cinematic Teaser'}
+            {isProcessing ? (
+              <div className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </div>
+            ) : 'Generate Cinematic Teaser'}
           </button>
         </form>
       </div>
 
       {/* About Section */}
-      <div className="w-full max-w-3xl mt-8 bg-gray-800 border border-gray-700 rounded-2xl shadow-md p-6 text-center">
-        <h3 className="text-lg font-semibold mb-2 text-purple-300">
+      <div className="w-full max-w-3xl bg-gradient-to-r from-purple-800 to-pink-800 rounded-2xl shadow-lg p-8 text-center">
+        <h3 className="text-2xl font-bold mb-4 text-white">
           About Cinematic Teasers
         </h3>
-        <p className="text-gray-300">
+        <p className="text-purple-200 leading-relaxed">
           Cinematic teasers capture the most visually compelling moments, creating
           dramatic previews that bring your story to life.
         </p>

@@ -1,7 +1,9 @@
 // pages/Landing.jsx
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Sparkles, Video, Brain } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
+console.log('API Base URL:', API_BASE_URL);
 const Landing = () => {
   const navigate = useNavigate();
 

@@ -49,7 +49,8 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "https://hk-modification-tip-learn.trycloudflare.com"
 ]
 
 app.add_middleware(
@@ -188,8 +189,8 @@ async def login(response: Response, user: UserLogin):
         value=session_id,
         httponly=True,
         max_age=24*60*60,
-        samesite="lax",  # or "strict"
-        secure=False       # True if using HTTPS
+        samesite="none",  # or "strict"
+        secure=True       # True if using HTTPS
     )
 
     return {

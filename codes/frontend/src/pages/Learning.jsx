@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import VideoInput from '../components/VideoInput'
+import { API_BASE_URL } from '../config';
 
 const Learning = () => {
   const navigate = useNavigate()
@@ -44,7 +45,7 @@ const Learning = () => {
         console.log(`${key}: ${value}`)
       }
 
-      const response = await fetch('http://localhost:8000/generate-teaser', {
+      const response = await fetch(`${API_BASE_URL}/generate-teaser`, {
         method: 'POST',
         body: submitData,
         credentials: 'include',

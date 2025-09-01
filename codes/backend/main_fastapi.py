@@ -46,11 +46,19 @@ app = FastAPI(title="Video Teaser Generator API")
 
 # Configure CORS to allow frontend connections
 origins = [
+
     "http://localhost:3000",
+
     "http://127.0.0.1:3000",
+
     "http://localhost:5173",
+
     "http://127.0.0.1:5173",
-    "https://hk-modification-tip-learn.trycloudflare.com"
+
+    "http://internally-dear-jaybird.ngrok-free.app",
+
+    "https://teaser-generation.vercel.app"
+
 ]
 
 app.add_middleware(

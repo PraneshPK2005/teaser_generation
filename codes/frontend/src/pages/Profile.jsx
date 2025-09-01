@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Video, Download, Calendar, Clock, FileText, User, History, BarChart3 } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const Dashboard = () => {
   const [history, setHistory] = useState([]);
@@ -18,7 +19,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/profile', {
+        const response = await axios.post(`${API_BASE_URL}/profile`, {
           withCredentials: true,
         });
 

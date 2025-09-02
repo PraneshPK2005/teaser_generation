@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import { API_BASE_URL } from '../config';
 export default function Signup() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -14,7 +14,7 @@ export default function Signup() {
     e.preventDefault();
     setError('');
     try {
-      await axios.post('http://localhost:8000/signup', { username, email, password });
+      await axios.post(`${API_BASE_URL}/signup`, { username, email, password });
       alert('Signup successful! Please login.');
       navigate('/login');
     } catch (err) {

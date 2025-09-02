@@ -2,8 +2,8 @@
 import google.generativeai as genai
 import os
 import time
-import ffmpeg
 import re
+import subprocess
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,38 +18,58 @@ genai.configure(api_key=api_key)
 
 # --- Function: Get Video Duration ---
 def get_video_duration(video_path):
-    """Gets the duration of a video file in seconds using FFprobe."""
+    """Gets the duration of a video file in seconds using the ffprobe OS command."""
+    command = [
+        'ffprobe',
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        video_path
+    ]
     try:
-        probe = ffmpeg.probe(video_path)
-        duration = float(probe['format']['duration'])
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        duration = float(result.stdout.strip())
         return duration
-    except ffmpeg.Error as e:
-        print(f"Error getting video duration: {e.stderr.decode('utf8')}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error getting video duration: {e.stderr}")
+        return 0
+    except FileNotFoundError:
+        print("Error: ffprobe command not found. Please ensure FFmpeg is installed and in your system's PATH.")
         return 0
 
 # --- Function: Split Video into Chunks ---
 def split_video_into_chunks(input_path, output_dir="video_chunks", chunk_duration=1800):
-    """Splits a video into 30-minute (1800s) chunks using FFmpeg."""
+    """Splits a video into 30-minute (1800s) chunks using the ffmpeg OS command."""
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     output_pattern = os.path.join(output_dir, 'chunk-%03d.mp4')
+
+    command = [
+        'ffmpeg',
+        '-i', input_path,
+        '-c', 'copy',
+        '-f', 'segment',
+        '-segment_time', str(chunk_duration),
+        '-reset_timestamps', '1',
+        '-y',  # Overwrite output files without asking
+        output_pattern
+    ]
     
     try:
-        ffmpeg.input(input_path).output(
-            output_pattern, 
-            c='copy',
-            f='segment', 
-            segment_time=chunk_duration,
-            reset_timestamps=1
-        ).run(overwrite_output=True)
+        print(f"Running FFmpeg command: {' '.join(command)}")
+        # Use capture_output to get stderr in case of an error
+        subprocess.run(command, check=True, capture_output=True, text=True)
         
         chunk_files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.startswith('chunk-') and f.endswith('.mp4')]
         chunk_files.sort()
         print(f"Video split into {len(chunk_files)} chunks.")
         return chunk_files
-    except ffmpeg.Error as e:
-        print(f"An error occurred during video splitting: {e.stderr.decode('utf8')}")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred during video splitting: {e.stderr}")
+        return []
+    except FileNotFoundError:
+        print("Error: ffmpeg command not found. Please ensure FFmpeg is installed and in your system's PATH.")
         return []
 
 # --- Function: Parse Gemini Response to Timestamps ---
@@ -101,8 +121,8 @@ def generate_timestamps_with_gemini(video_path, max_length=70, min_length=60):
     
     Returns:
         tuple: (timestamps, total_duration)
-                timestamps: List of [start, end] pairs in seconds
-                total_duration: Sum of all clip durations
+               timestamps: List of [start, end] pairs in seconds
+               total_duration: Sum of all clip durations
     """
     chunk_duration_seconds = 1800  # 30 minutes
 
@@ -201,24 +221,32 @@ IMPORTANT:
         raise ValueError("No timestamps were generated from the video. Gemini did not return any valid timestamps.")
     
     # 8. Clean up the local chunk files
-    if duration > chunk_duration_seconds:
+    if duration > chunk_duration_seconds and chunk_paths:
         print("\nCleaning up local video chunks...")
         for file_path in chunk_paths:
             if os.path.exists(file_path):
                 os.remove(file_path)
         if os.path.exists("video_chunks"):
-            os.rmdir("video_chunks")
-        print("Local files cleaned up.")
-    
+            try:
+                os.rmdir("video_chunks")
+                print("Local files cleaned up.")
+            except OSError as e:
+                print(f"Error removing chunk directory: {e}. It might not be empty.")
+
     return all_timestamps, total_duration
 
 # --- Standalone Execution (if run directly) ---
 if __name__ == "__main__":
-    video_file_path = "Bhoot Raja Aur Ronnie (2012) .mp4"
-    try:
-        timestamps, total_duration = generate_timestamps_with_gemini(video_file_path)
-        print(f"Generated {len(timestamps)} timestamps with total duration: {total_duration} seconds")
-        for ts in timestamps:
-            print(f"[{ts[0]}s - {ts[1]}s]")
-    except Exception as e:
-        print(f"Error: {e}")
+    # Example video file path
+    video_file_path = "Bhoot Raja Aur Ronnie (2012) .mp4" 
+    if not os.path.exists(video_file_path):
+        print(f"Error: Video file not found at '{video_file_path}'")
+    else:
+        try:
+            timestamps, total_duration = generate_timestamps_with_gemini(video_file_path)
+            print("\n--- Final Results ---")
+            print(f"Generated {len(timestamps)} timestamps with a total duration of: {total_duration:.2f} seconds")
+            for ts in timestamps:
+                print(f"  - Clip from {ts[0]:.2f}s to {ts[1]:.2f}s")
+        except Exception as e:
+            print(f"\nAn error occurred in the main process: {e}")

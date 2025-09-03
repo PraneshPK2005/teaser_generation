@@ -40,11 +40,6 @@ const Learning = () => {
         submitData.append('video_file', formData.videoFile)
       }
 
-      // Debug: Log data to verify before sending
-      for (let [key, value] of submitData.entries()) {
-        console.log(`${key}: ${value}`)
-      }
-
       const response = await fetch(`${API_BASE_URL}/generate-teaser`, {
         method: 'POST',
         body: submitData,
@@ -68,26 +63,25 @@ const Learning = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-6 flex flex-col items-center relative overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
-      
-      <div className="text-center mb-10 relative z-10">
-        <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 py-12 px-6 flex flex-col items-center text-white">
+      {/* Header */}
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
           </svg>
         </div>
-        <h1 className="text-4xl font-bold text-indigo-800 mb-4">
+        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
           Learning Teaser Generator
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl">
+        <p className="text-lg text-purple-200 max-w-2xl">
           Create educational teasers that highlight key concepts and summaries for your audience
         </p>
       </div>
 
-      <div className="w-full max-w-3xl bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl p-8 mb-12 relative z-10 border border-white/30">
+      {/* Input Form */}
+      <div className="w-full max-w-3xl bg-gray-800/50 backdrop-blur-md border border-purple-500/30 shadow-2xl rounded-2xl p-8 mb-12">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Video Input */}
           <VideoInput formData={formData} handleInputChange={handleInputChange} />
@@ -95,7 +89,7 @@ const Learning = () => {
           {/* Length Controls */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+              <label className="block text-sm font-semibold mb-3 uppercase tracking-wide text-purple-200">
                 Maximum Length (seconds)
               </label>
               <input
@@ -103,14 +97,14 @@ const Learning = () => {
                 name="maxLength"
                 value={formData.maxLength}
                 onChange={handleInputChange}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors backdrop-blur-sm"
+                className="w-full border-2 border-gray-700 rounded-xl px-4 py-3 bg-gray-900/70 text-white focus:outline-none focus:border-purple-500 transition-colors backdrop-blur-sm"
                 min="10"
                 max="300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+              <label className="block text-sm font-semibold mb-3 uppercase tracking-wide text-purple-200">
                 Minimum Length (seconds)
               </label>
               <input
@@ -118,7 +112,7 @@ const Learning = () => {
                 name="minLength"
                 value={formData.minLength}
                 onChange={handleInputChange}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors backdrop-blur-sm"
+                className="w-full border-2 border-gray-700 rounded-xl px-4 py-3 bg-gray-900/70 text-white focus:outline-none focus:border-purple-500 transition-colors backdrop-blur-sm"
                 min="5"
                 max="120"
               />
@@ -127,15 +121,18 @@ const Learning = () => {
 
           {/* Method Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+            <label className="block text-sm font-semibold mb-3 uppercase tracking-wide text-purple-200">
               Processing Method
             </label>
             <select
               name="method"
               value={formData.method}
               onChange={handleInputChange}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors appearance-none bg-white bg-arrow-down bg-no-repeat bg-right-4 bg-[length:20px] backdrop-blur-sm"
-              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234B5563'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")" }}
+              className="w-full border-2 border-gray-700 rounded-xl px-4 py-3 bg-gray-900/70 text-white focus:outline-none focus:border-purple-500 transition-colors appearance-none bg-arrow-down bg-no-repeat bg-right-4 bg-[length:20px] backdrop-blur-sm"
+              style={{
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D8B4FE'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")",
+              }}
             >
               <option value="learning_a">Learning Method A (Engaging Dialogue)</option>
               <option value="learning_b">Learning Method B (Key Points & Summary)</option>
@@ -146,33 +143,52 @@ const Learning = () => {
           <button
             type="submit"
             disabled={isProcessing}
-            className={`w-full py-4 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 ${
+            className={`w-full py-4 rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 ${
               isProcessing
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl'
+                ? 'bg-gray-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-xl'
             }`}
           >
             {isProcessing ? (
               <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Processing...
               </div>
-            ) : 'Generate Learning Teaser'}
+            ) : (
+              'Generate Learning Teaser'
+            )}
           </button>
         </form>
       </div>
 
       {/* About Section */}
-      <div className="w-full max-w-3xl bg-gradient-to-r from-blue-500/70 to-indigo-500/70 backdrop-blur-md rounded-2xl shadow-lg p-8 text-center text-white relative z-10 border border-blue-400/30">
-        <h3 className="text-2xl font-bold mb-4">
+      <div className="w-full max-w-3xl bg-gradient-to-r from-purple-800/70 to-pink-800/70 backdrop-blur-md rounded-2xl shadow-lg p-8 text-center border border-purple-500/30">
+        <h3 className="text-2xl font-bold mb-4 text-white">
           About Learning Teasers
         </h3>
-        <p className="text-blue-100 leading-relaxed">
+        <p className="text-purple-200 leading-relaxed">
           Learning teasers are perfect for educational content. They highlight key concepts
-          and summaries to create engaging and informative previews for your audience.
+          and summaries to create engaging and informative previews for your audience using
+          advanced AI analysis and composition techniques.
         </p>
       </div>
     </div>

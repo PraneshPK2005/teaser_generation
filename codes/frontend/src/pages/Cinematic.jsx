@@ -62,17 +62,14 @@ const Cinematic = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 py-12 px-6 flex flex-col items-center text-white relative overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1440404653325-ab127d49abc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
-      
-      <div className="text-center mb-10 relative z-10">
-        <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 py-12 px-6 flex flex-col items-center text-white">
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
           </svg>
         </div>
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
           Cinematic Teaser Generator
         </h1>
         <p className="text-lg text-purple-200 max-w-2xl">
@@ -80,7 +77,7 @@ const Cinematic = () => {
         </p>
       </div>
 
-      <div className="w-full max-w-3xl bg-gray-800/50 backdrop-blur-md border border-purple-500/30 shadow-2xl rounded-2xl p-8 mb-12 relative z-10">
+      <div className="w-full max-w-3xl bg-gray-800/50 backdrop-blur-md border border-purple-500/30 shadow-2xl rounded-2xl p-8 mb-12">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Video Input */}
           <VideoInput formData={formData} handleInputChange={handleInputChange} />
@@ -159,13 +156,14 @@ const Cinematic = () => {
       </div>
 
       {/* About Section */}
-      <div className="w-full max-w-3xl bg-gradient-to-r from-purple-800/70 to-pink-800/70 backdrop-blur-md rounded-2xl shadow-lg p-8 text-center relative z-10 border border-purple-500/30">
+      <div className="w-full max-w-3xl bg-gradient-to-r from-purple-800/70 to-pink-800/70 backdrop-blur-md rounded-2xl shadow-lg p-8 text-center border border-purple-500/30">
         <h3 className="text-2xl font-bold mb-4 text-white">
           About Cinematic Teasers
         </h3>
         <p className="text-purple-200 leading-relaxed">
           Cinematic teasers capture the most visually compelling moments, creating
-          dramatic previews that bring your story to life.
+          dramatic previews that bring your story to life using advanced AI analysis
+          of visual content and scene composition.
         </p>
       </div>
     </div>

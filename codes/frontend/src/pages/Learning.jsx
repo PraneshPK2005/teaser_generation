@@ -68,9 +68,12 @@ const Learning = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-6 flex flex-col items-center">
-      <div className="text-center mb-10">
-        <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-6 flex flex-col items-center relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
+      
+      <div className="text-center mb-10 relative z-10">
+        <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg backdrop-blur-sm">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
@@ -84,7 +87,7 @@ const Learning = () => {
         </p>
       </div>
 
-      <div className="w-full max-w-3xl bg-white shadow-2xl rounded-2xl p-8 mb-12">
+      <div className="w-full max-w-3xl bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl p-8 mb-12 relative z-10 border border-white/30">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Video Input */}
           <VideoInput formData={formData} handleInputChange={handleInputChange} />
@@ -100,7 +103,7 @@ const Learning = () => {
                 name="maxLength"
                 value={formData.maxLength}
                 onChange={handleInputChange}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors backdrop-blur-sm"
                 min="10"
                 max="300"
               />
@@ -115,7 +118,7 @@ const Learning = () => {
                 name="minLength"
                 value={formData.minLength}
                 onChange={handleInputChange}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors backdrop-blur-sm"
                 min="5"
                 max="120"
               />
@@ -131,7 +134,7 @@ const Learning = () => {
               name="method"
               value={formData.method}
               onChange={handleInputChange}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors appearance-none bg-white bg-arrow-down bg-no-repeat bg-right-4 bg-[length:20px]"
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors appearance-none bg-white bg-arrow-down bg-no-repeat bg-right-4 bg-[length:20px] backdrop-blur-sm"
               style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234B5563'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")" }}
             >
               <option value="learning_a">Learning Method A (Engaging Dialogue)</option>
@@ -163,7 +166,7 @@ const Learning = () => {
       </div>
 
       {/* About Section */}
-      <div className="w-full max-w-3xl bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl shadow-lg p-8 text-center text-white">
+      <div className="w-full max-w-3xl bg-gradient-to-r from-blue-500/70 to-indigo-500/70 backdrop-blur-md rounded-2xl shadow-lg p-8 text-center text-white relative z-10 border border-blue-400/30">
         <h3 className="text-2xl font-bold mb-4">
           About Learning Teasers
         </h3>

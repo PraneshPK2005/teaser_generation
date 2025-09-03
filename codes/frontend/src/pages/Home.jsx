@@ -6,19 +6,22 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-tr from-purple-700 via-pink-600 to-orange-500 text-white text-center p-6 relative">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-tr from-purple-700 via-pink-600 to-orange-500 text-white text-center p-6 relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
+      
       {/* Profile Icon */}
       <button
         onClick={() => navigate("/profile")}
-        className="absolute top-8 right-8 p-3 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl shadow-lg hover:bg-white/20 transition-all duration-300"
+        className="absolute top-8 right-8 p-3 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl shadow-lg hover:bg-white/20 transition-all duration-300 z-10"
         title="View Dashboard"
       >
         <User size={28} />
       </button>
 
       {/* Page Content */}
-      <div className="max-w-2xl mx-auto">
-        <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+      <div className="max-w-2xl mx-auto relative z-10">
+        <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl backdrop-blur-sm">
           <Film size={48} className="text-white" />
         </div>
         

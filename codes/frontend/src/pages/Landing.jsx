@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Sparkles, Video, Brain } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
-console.log('API Base URL:', API_BASE_URL);
 const Landing = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center opacity-20"></div>
+      
       {/* Navbar */}
-      <header className="flex items-center justify-between px-8 py-6 bg-black/30 backdrop-blur-md border-b border-indigo-500/30">
+      <header className="flex items-center justify-between px-8 py-6 bg-black/30 backdrop-blur-xl rounded-b-2xl border-b border-indigo-500/30 relative z-10">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
           AI Teaser Generator
         </h1>
@@ -31,7 +33,7 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center flex-grow text-center px-6 py-16">
+      <section className="flex flex-col items-center justify-center flex-grow text-center px-6 py-16 relative z-10">
         <div className="mb-8">
           <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center shadow-2xl">
             <PlayCircle size={48} className="text-white" />
@@ -63,13 +65,13 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="bg-gradient-to-b from-white to-gray-100 text-gray-800 py-20 px-6 md:px-20">
+      <section className="bg-gradient-to-b from-white/90 to-gray-100/90 text-gray-800 py-20 px-6 md:px-20 relative z-10 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             How Our AI Teaser Generator Works
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white group hover:-translate-y-2">
+            <div className="p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/80 backdrop-blur-md group hover:-translate-y-2 border border-white/30">
               <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-200 transition-colors">
                 <Video className="h-8 w-8 text-indigo-600" />
               </div>
@@ -78,7 +80,7 @@ const Landing = () => {
                 Start by uploading your cinematic or learning content in supported formats like MP4 or WAV.
               </p>
             </div>
-            <div className="p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white group hover:-translate-y-2">
+            <div className="p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/80 backdrop-blur-md group hover:-translate-y-2 border border-white/30">
               <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-purple-200 transition-colors">
                 <Brain className="h-8 w-8 text-purple-600" />
               </div>
@@ -87,7 +89,7 @@ const Landing = () => {
                 Our AI extracts key moments, analyzes timestamps, and processes visuals with context.
               </p>
             </div>
-            <div className="p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white group hover:-translate-y-2">
+            <div className="p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/80 backdrop-blur-md group hover:-translate-y-2 border border-white/30">
               <div className="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-pink-200 transition-colors">
                 <Sparkles className="h-8 w-8 text-pink-600" />
               </div>
@@ -101,7 +103,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Footer */}
-      <footer className="text-center py-8 bg-black/20 backdrop-blur-md border-t border-indigo-500/20">
+      <footer className="text-center py-8 bg-black/20 backdrop-blur-md border-t border-indigo-500/20 relative z-10">
         <p className="text-sm opacity-80">
           © {new Date().getFullYear()} AI Teaser Generator. All rights reserved.
         </p>

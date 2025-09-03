@@ -88,27 +88,33 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent mb-6"></div>
-        <p className="text-xl font-medium">Loading your history...</p>
-        <p className="text-gray-400 mt-2">Please wait while we fetch your data</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
+        
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent mb-6 relative z-10"></div>
+        <p className="text-xl font-medium relative z-10">Loading your history...</p>
+        <p className="text-gray-400 mt-2 relative z-10">Please wait while we fetch your data</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-6 text-center">
-        <div className="bg-red-500/20 backdrop-blur-sm p-6 rounded-2xl border border-red-500/30 mb-8">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-6 text-center relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
+        
+        <div className="bg-red-500/20 backdrop-blur-sm p-6 rounded-2xl border border-red-500/30 mb-8 relative z-10">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 className="text-3xl font-bold mb-4">Error Loading History</h2>
-        <p className="text-gray-300 mb-8 max-w-md">{error}</p>
+        <h2 className="text-3xl font-bold mb-4 relative z-10">Error Loading History</h2>
+        <p className="text-gray-300 mb-8 max-w-md relative z-10">{error}</p>
         <button
           onClick={() => navigate('/home')}
-          className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+          className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl relative z-10"
         >
           <ArrowLeft className="w-5 h-5 mr-2" /> Go Back Home
         </button>
@@ -117,8 +123,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white p-6 relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-20"></div>
+      
+      <div className="max-w-6xl mx-auto relative z-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 p-6 bg-gray-800/30 backdrop-blur-md rounded-2xl border border-purple-500/20">
           <div className="flex items-center mb-4 md:mb-0">
@@ -250,7 +259,7 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <h3 className="text-sm font-medium text-gray-300 mb-2">Source</h3>
-                    <p className="text-sm break-all bg-gray-900/30 p-3 rounded-lg">
+                    <p className="text-sm break-all bg-gray-900/30 p-3 rounded-lg backdrop-blur-sm">
                       {item.youtube_url || item.main_file_url || 'N/A'}
                     </p>
                   </div>
@@ -261,13 +270,13 @@ const Dashboard = () => {
                         href={item.teaser_file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center bg-gray-900/30 p-3 rounded-lg hover:bg-gray-900/50 transition-all"
+                        className="inline-flex items-center bg-gray-900/30 p-3 rounded-lg hover:bg-gray-900/50 transition-all backdrop-blur-sm"
                       >
                         <Download className="w-4 h-4 mr-2 text-purple-400" />
                         <span>Download Teaser</span>
                       </a>
                     ) : (
-                      <span className="text-gray-500 bg-gray-900/30 p-3 rounded-lg inline-block">Not available</span>
+                      <span className="text-gray-500 bg-gray-900/30 p-3 rounded-lg inline-block backdrop-blur-sm">Not available</span>
                     )}
                   </div>
                 </div>

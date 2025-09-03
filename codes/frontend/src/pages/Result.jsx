@@ -130,33 +130,6 @@ const Result = () => {
             </div>
           </div>
         </div>
-
-        {/* Timestamps */}
-        {result.timestamps && result.timestamps.length > 0 && (
-          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-2xl p-6 border border-purple-500/30">
-            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Timestamps Used
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {result.timestamps.map((timestamp, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center bg-gray-700/50 backdrop-blur-sm px-5 py-3 rounded-xl border border-gray-600/30 hover:bg-gray-700 transition-colors"
-                >
-                  <span className="font-mono text-purple-200">
-                    {timestamp.start}s - {timestamp.end}s
-                  </span>
-                  <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-lg text-sm">
-                    {timestamp.end - timestamp.start}s
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
